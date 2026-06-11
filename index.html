@@ -10,6 +10,7 @@
             --bg-selected: #E8F5E9;
             --ai-text: #1976D2;
             --btn-bg: #4CAF50;
+            --btn-toggle: #1976D2;
             --text-main: #333333;
             --text-muted: #757575;
             --border-color: #eeeeee;
@@ -123,19 +124,27 @@
             border-radius: 50%;
         }
 
-        .submit-btn {
+        .main-btn {
             display: block;
             width: 100%;
             padding: 16px;
-            background-color: var(--btn-bg);
             color: white;
             border: none;
             border-radius: 8px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 32px;
             text-align: center;
+        }
+
+        .toggle-btn {
+            background-color: var(--btn-toggle);
+            margin-bottom: 16px;
+        }
+
+        .submit-btn {
+            background-color: var(--btn-bg);
+            margin-top: 32px;
         }
 
         .submit-btn:disabled {
@@ -159,17 +168,22 @@
     <div id="loading-indicator">Syncing with database...</div>
 
     <div id="main-list-container" style="display: none;">
-        <div id="main-grocery-list"></div>
+        
+        <button class="main-btn toggle-btn" id="toggle-list-btn" onclick="toggleGroceryList()">Grocery List ▼</button>
+        
+        <div id="grocery-list-wrapper" style="display: none;">
+            <div id="main-grocery-list"></div>
+        </div>
 
         <h2>AI Suggestions</h2>
         <div id="ai-recommendations-list"></div>
 
-        <button class="submit-btn" id="submit-btn" onclick="submitToWhatsApp()">Submit & Share to WhatsApp</button>
+        <button class="main-btn submit-btn" id="submit-btn" onclick="submitToWhatsApp()">Submit & Share to WhatsApp</button>
     </div>
 </div>
 
 <script>
-    const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxAdS7UEjvvgEkvNqRFPmk0nKPhQaH3-0-hRITOPL4EDpVElMKrVgD-FLei_LMgy040/exec"; 
+    const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwg9ToSYlYq_ahA1JdF7Qo_ccgfgX4gvoYo7FjuEt44q4TavvYOyT_fnhn-NsLMLl3c/exec"; 
     let databaseItems = [];
 
     const quantityOptions = {
@@ -186,7 +200,8 @@
 
     let aiRecommendations = [
         { id: 101, name: "Butter", contextReason: "Frequently purchased with Bread" },
-        { id: 102, name: "Tea Powder", contextReason: "Trending essential" }
+        { id: 102, name: "Tea Powder", contextReason: "Trending essential" },
+        { id: 103, name: "Tomatoes", contextReason: "Usually bought with Onions" }
     ];
 
     window.onload = fetchDatabaseItems;
@@ -202,6 +217,10 @@
                 currentQuantity: item.lastQuantity || defaultQuantities[item.unitType] || '1'
             }));
 
+            aiRecommendations = aiRecommendations.filter(aiItem => 
+                !databaseItems.some(dbItem => dbItem.name.toLowerCase() === aiItem.name.toLowerCase())
+            );
+
             document.getElementById('loading-indicator').style.display = 'none';
             document.getElementById('main-list-container').style.display = 'block';
             
@@ -210,6 +229,18 @@
         } catch (error) {
             console.error("Error fetching data:", error);
             document.getElementById('loading-indicator').innerText = "Failed to load database. Please check connection.";
+        }
+    }
+
+    function toggleGroceryList() {
+        const wrapper = document.getElementById('grocery-list-wrapper');
+        const btn = document.getElementById('toggle-list-btn');
+        if (wrapper.style.display === 'none') {
+            wrapper.style.display = 'block';
+            btn.innerText = 'Grocery List ▲';
+        } else {
+            wrapper.style.display = 'none';
+            btn.innerText = 'Grocery List ▼';
         }
     }
 
@@ -317,6 +348,14 @@
 
             renderGroceryList();
             renderAIList();
+            
+            const listWrapper = document.getElementById('grocery-list-wrapper');
+            const toggleBtn = document.getElementById('toggle-list-btn');
+            if (listWrapper.style.display === 'none') {
+                listWrapper.style.display = 'block';
+                toggleBtn.innerText = 'Grocery List ▲';
+            }
+
         } catch (e) {
             alert("Failed to add to database.");
             buttonElement.style.opacity = '1';
