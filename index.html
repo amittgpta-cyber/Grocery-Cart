@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Grocery List</title>
+    <style>
+        :root {
+            --primary-color: #2E7D32;
+            --bg-selected: #E8F5E9;
+            --ai-text: #1976D2;
+            --btn-bg: #4CAF50;
+            --text-main: #333333;
+            --text-muted: #757575;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 16px;
+            background-color: #f5f5f5;
+            color: var(--text-main);
+        }
+
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-top: 0;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 16px;
+            margin-top: 32px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eeeeee;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #eeeeee;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .list-item.selected {
+            background-color: var(--bg-selected);
+        }
+
+        .list-item.selected .item-name {
+            color: var(--primary-color);
+        }
+
+        .icon-container {
+            width: 28px;
+            height: 28px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .item-details {
+            flex-grow: 1;
+        }
+
+        .item-name {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .item-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .ai-reason {
+            color: var(--ai-text);
+        }
+
+        .bookmark-btn {
+            background: none;
+            border: none;
+            color: #F57C00;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+        }
+
+        .bookmark-btn:hover {
+            background-color: #FFF3E0;
+        }
+
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background-color: var(--btn-bg);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 32px;
+            text-align: center;
+        }
+
+        .submit-btn:hover {
+            background-color: #388E3C;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h1>Monthly Grocery List</h1>
+    <div id="main-grocery-list"></div>
+
+    <h2>AI Suggestions (Frequently bought together)</h2>
+    <div id="ai-recommendations-list"></div>
+
+    <button class="submit-btn" onclick="submitToWhatsApp()">Submit & Share to WhatsApp</button>
+</div>
+
+<script>
+    // Replace with the pre-selected contact's number (include country code, no + or spaces)
+    const PRE_SELECTED_CONTACT = "919876543210"; 
+
+    // Database mock
+    let databaseItems = [
+        { id: 1, name: "Milk (2L)", orderedInLast30Days: true, selected: false, count: 20 },
+        { id: 2, name: "Whole Wheat Bread", orderedInLast30Days: true, selected: false, count: 18 },
+        { id: 3, name: "Eggs (1 Dozen)", orderedInLast30Days: false, selected: false, count: 12 },
+        { id: 4, name: "Basmati Rice (5kg)", orderedInLast30Days: true, selected: false, count: 8 },
+        { id: 5, name: "Cooking Oil (1L)", orderedInLast30Days: true, selected: false, count: 6 },
+        { id: 6, name: "Onions (2kg)", orderedInLast30Days: true, selected: false, count: 15 }
+    ].sort((a, b) => b.count - a.count); // Most bought items on top
+
+    // AI Suggestions mock
+    let aiRecommendations = [
+        { id: 101, name: "Butter (500g)", contextReason: "Usually bought with Whole Wheat Bread" },
+        { id: 102, name: "Tomatoes (1kg)", contextReason: "Frequently purchased with Onions" },
+        { id: 103, name: "Tea Powder", contextReason: "Trending essential for this month" }
+    ];
+
+    function renderGroceryList() {
+        const container = document.getElementById('main-grocery-list');
+        container.innerHTML = '';
+
+        databaseItems.forEach(item => {
+            const div = document.createElement('div');
+            div.className = `list-item ${item.selected ? 'selected' : ''}`;
+            div.onclick = () => toggleSelection(item.id);
+
+            const checkIcon = item.selected ? '✓' : '';
+            const recentFlag = item.orderedInLast30Days ? '<div class="item-meta">Ordered in last 30 days</div>' : '';
+
+            div.innerHTML = `
+                <div class="icon-container">${checkIcon}</div>
+                <div class="item-details">
+                    <div class="item-name">${item.name}</div>
+                    ${recentFlag}
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function renderAIList() {
+        const container = document.getElementById('ai-recommendations-list');
+        container.innerHTML = '';
+
+        if (aiRecommendations.length === 0) {
+            container.innerHTML = '<div class="item-meta" style="padding: 16px 0;">No new recommendations at this time.</div>';
+            return;
+        }
+
+        aiRecommendations.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            
+            div.innerHTML = `
+                <div class="icon-container" style="color: #1976D2;">✨</div>
+                <div class="item-details">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-meta ai-reason">${item.contextReason}</div>
+                </div>
+                <button class="bookmark-btn" onclick="addToMainList(${item.id})" title="Add to List">➕</button>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function toggleSelection(id) {
+        const item = databaseItems.find(i => i.id === id);
+        if (item) {
+            item.selected = !item.selected;
+            renderGroceryList();
+        }
+    }
+
+    function addToMainList(id) {
+        const index = aiRecommendations.findIndex(i => i.id === id);
+        if (index !== -1) {
+            const aiItem = aiRecommendations[index];
+            
+            // Remove from AI recommendations
+            aiRecommendations.splice(index, 1);
+            
+            // Add to database items and automatically select it
+            databaseItems.unshift({
+                id: Date.now(),
+                name: aiItem.name,
+                orderedInLast30Days: false,
+                selected: true,
+                count: 0
+            });
+
+            renderGroceryList();
+            renderAIList();
+        }
+    }
+
+    function submitToWhatsApp() {
+        const selectedItems = databaseItems.filter(i => i.selected);
+        
+        if (selectedItems.length === 0) {
+            alert("Please select at least one item to share.");
+            return;
+        }
+
+        // Format the message
+        const formattedItems = selectedItems.map(i => `✅ ${i.name}`).join('%0A');
+        const textMessage = `Hi! Here is the monthly grocery list:%0A%0A${formattedItems}`;
+        
+        // Open WhatsApp URI
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${PRE_SELECTED_CONTACT}&text=${textMessage}`;
+        window.open(whatsappUrl, '_blank');
+    }
+
+    // Initialize UI
+    renderGroceryList();
+    renderAIList();
+</script>
+
+</body>
+</html>
