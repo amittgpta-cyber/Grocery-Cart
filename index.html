@@ -181,7 +181,6 @@
             font-style: italic;
         }
 
-        /* Modal Styles */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -285,7 +284,7 @@
 </div>
 
 <script>
-    const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzLVDl9SUT5exqgtteoWcDXYQRV8Xux7V7P346SWm4qQsa5-ButiXzTScBGjO9FgGLY/exec"; 
+    const GOOGLE_SHEET_API_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL"; 
     let databaseItems = [];
     let currentRecommendations = [];
 
@@ -425,17 +424,18 @@
 
     function updateRecommendations() {
         currentRecommendations = [];
-        const selectedItems = databaseItems.filter(i => i.selected).map(i => i.name.toLowerCase());
+        const selectedItems = databaseItems.filter(i => i.selected).map(i => i.name.trim().toLowerCase());
 
         if (selectedItems.length > 0) {
             aiIntelligenceRules.forEach(rule => {
                 const isTriggered = rule.triggers.some(trigger => 
-                    selectedItems.some(selected => selected.includes(trigger))
+                    selectedItems.some(selected => selected.includes(trigger.toLowerCase()))
                 );
 
                 if (isTriggered) {
-                    const existsInDb = databaseItems.some(dbItem => dbItem.name.toLowerCase() === rule.suggestion.name.toLowerCase());
-                    const alreadySuggested = currentRecommendations.some(rec => rec.name === rule.suggestion.name);
+                    const suggName = rule.suggestion.name.trim().toLowerCase();
+                    const existsInDb = databaseItems.some(dbItem => dbItem.name.trim().toLowerCase() === suggName);
+                    const alreadySuggested = currentRecommendations.some(rec => rec.name.trim().toLowerCase() === suggName);
 
                     if (!existsInDb && !alreadySuggested) {
                         currentRecommendations.push({
