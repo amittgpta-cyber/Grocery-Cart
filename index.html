@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,76 +46,24 @@
             border-bottom: 1px solid var(--border-color);
         }
 
-        /* Contact Section */
-        .contact-section {
-            background-color: #f9f9f9;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-            border: 1px solid var(--border-color);
+        .list-item-container {
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .input-group {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .input-group input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .btn-secondary {
-            background-color: #e0e0e0;
-            color: #333;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .contact-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .contact-pill {
-            background-color: white;
-            border: 1px solid #ccc;
-            padding: 6px 12px;
-            border-radius: 16px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        .contact-pill.active {
-            background-color: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        /* List Items */
         .list-item {
             display: flex;
             align-items: center;
             padding: 16px;
-            border-bottom: 1px solid var(--border-color);
             cursor: pointer;
             border-radius: 8px;
             transition: background-color 0.2s ease;
         }
 
-        .list-item.selected {
+        .list-item-container.selected {
             background-color: var(--bg-selected);
         }
 
-        .list-item.selected .item-name {
+        .list-item-container.selected .item-name {
             color: var(--primary-color);
         }
 
@@ -147,9 +94,24 @@
             margin-top: 4px;
         }
 
-        .ai-reason {
-            color: var(--ai-text);
+        .quantity-selector {
+            padding: 0 16px 16px 56px;
+            display: none;
         }
+
+        .list-item-container.selected .quantity-selector {
+            display: block;
+        }
+
+        select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            width: 150px;
+        }
+
+        .ai-reason { color: var(--ai-text); }
 
         .bookmark-btn {
             background: none;
@@ -161,16 +123,6 @@
             border-radius: 50%;
         }
 
-        .bookmark-btn:hover {
-            background-color: #FFF3E0;
-        }
-
-        .bookmark-btn.loading {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Submit Button */
         .submit-btn {
             display: block;
             width: 100%;
@@ -186,12 +138,8 @@
             text-align: center;
         }
 
-        .submit-btn:hover {
-            background-color: #388E3C;
-        }
-
         .submit-btn:disabled {
-            background-color: #a5d6a7;
+            background-color: #A5D6A7;
             cursor: not-allowed;
         }
 
@@ -208,22 +156,12 @@
 <div class="app-container">
     <h1>Monthly Grocery List</h1>
 
-    <div class="contact-section">
-        <div style="font-weight: 500; margin-bottom: 12px;">Share with:</div>
-        <div class="input-group">
-            <input type="text" id="contact-name" placeholder="Name">
-            <input type="tel" id="contact-phone" placeholder="Phone (e.g. 919876543210)">
-            <button class="btn-secondary" onclick="addNewContact()">Add</button>
-        </div>
-        <div class="contact-list" id="saved-contacts-list"></div>
-    </div>
-
-    <div id="loading-indicator">Syncing with Google Sheets...</div>
+    <div id="loading-indicator">Syncing with database...</div>
 
     <div id="main-list-container" style="display: none;">
         <div id="main-grocery-list"></div>
 
-        <h2>AI Suggestions (Frequently bought together)</h2>
+        <h2>AI Suggestions</h2>
         <div id="ai-recommendations-list"></div>
 
         <button class="submit-btn" id="submit-btn" onclick="submitToWhatsApp()">Submit & Share to WhatsApp</button>
@@ -231,162 +169,96 @@
 </div>
 
 <script>
-    // ==========================================
-    // CONFIGURATION
-    // ==========================================
-    // Replace this with your Google Apps Script Web App URL
     const GOOGLE_SHEET_API_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL"; 
-
-    // ==========================================
-    // STATE
-    // ==========================================
     let databaseItems = [];
-    let savedContacts = JSON.parse(localStorage.getItem('groceryContacts')) || [];
-    let selectedContactPhone = null;
 
-    // AI Suggestions mock (would normally be generated by AI backend based on Sheet data)
-    let aiRecommendations = [
-        { id: 101, name: "Butter (500g)", contextReason: "Usually bought with Whole Wheat Bread" },
-        { id: 102, name: "Tomatoes (1kg)", contextReason: "Frequently purchased with Onions" },
-        { id: 103, name: "Tea Powder", contextReason: "Trending essential for this month" }
-    ];
-
-    // ==========================================
-    // INITIALIZATION
-    // ==========================================
-    window.onload = () => {
-        renderContacts();
-        fetchDatabaseItems();
+    const quantityOptions = {
+        'Weight': ["100g", "250g", "500g", "1kg", "2kg", "3kg", "5kg", "10kg"],
+        'Volume': ["250ml", "500ml", "1L", "2L", "5L"],
+        'Count': ["1", "2", "3", "4", "5", "6", "10", "1 Dozen", "2 Dozen"]
     };
 
-    // ==========================================
-    // CONTACT MANAGEMENT
-    // ==========================================
-    function renderContacts() {
-        const container = document.getElementById('saved-contacts-list');
-        container.innerHTML = '';
+    const defaultQuantities = {
+        'Weight': '1kg',
+        'Volume': '1L',
+        'Count': '1'
+    };
 
-        savedContacts.forEach(contact => {
-            const pill = document.createElement('div');
-            pill.className = `contact-pill ${selectedContactPhone === contact.phone ? 'active' : ''}`;
-            pill.textContent = `${contact.name} (${contact.phone})`;
-            pill.onclick = () => selectContact(contact.phone);
-            container.appendChild(pill);
-        });
+    let aiRecommendations = [
+        { id: 101, name: "Butter", contextReason: "Frequently purchased with Bread" },
+        { id: 102, name: "Tea Powder", contextReason: "Trending essential" }
+    ];
 
-        updateSubmitButtonState();
-    }
+    window.onload = fetchDatabaseItems;
 
-    function addNewContact() {
-        const nameInput = document.getElementById('contact-name');
-        const phoneInput = document.getElementById('contact-phone');
-        const name = nameInput.value.trim();
-        const phone = phoneInput.value.trim().replace(/\D/g, ''); // Strip non-digits
-
-        if (name && phone) {
-            savedContacts.push({ name, phone });
-            localStorage.setItem('groceryContacts', JSON.stringify(savedContacts));
-            
-            nameInput.value = '';
-            phoneInput.value = '';
-            
-            selectContact(phone);
-        } else {
-            alert("Please enter both name and a valid phone number.");
-        }
-    }
-
-    function selectContact(phone) {
-        selectedContactPhone = phone;
-        renderContacts();
-    }
-
-    // ==========================================
-    // GOOGLE SHEETS DB INTEGRATION
-    // ==========================================
     async function fetchDatabaseItems() {
         try {
-            // Uncomment below when real URL is provided
-            /*
-            const response = await fetch(`${GOOGLE_SHEET_API_URL}?action=getItems`);
+            const response = await fetch(GOOGLE_SHEET_API_URL);
             const data = await response.json();
-            databaseItems = data.map(item => ({...item, selected: false}));
-            */
+            
+            databaseItems = data.map(item => ({
+                ...item, 
+                selected: false,
+                currentQuantity: item.lastQuantity || defaultQuantities[item.unitType] || '1'
+            }));
 
-            // Mocking the fetch delay and response for demonstration
-            setTimeout(() => {
-                databaseItems = [
-                    { id: 1, name: "Milk (2L)", orderedInLast30Days: true, selected: false, count: 20 },
-                    { id: 2, name: "Whole Wheat Bread", orderedInLast30Days: true, selected: false, count: 18 },
-                    { id: 3, name: "Eggs (1 Dozen)", orderedInLast30Days: false, selected: false, count: 12 },
-                    { id: 4, name: "Basmati Rice (5kg)", orderedInLast30Days: true, selected: false, count: 8 }
-                ].sort((a, b) => b.count - a.count);
-
-                document.getElementById('loading-indicator').style.display = 'none';
-                document.getElementById('main-list-container').style.display = 'block';
-                
-                renderGroceryList();
-                renderAIList();
-            }, 1000);
-
+            document.getElementById('loading-indicator').style.display = 'none';
+            document.getElementById('main-list-container').style.display = 'block';
+            
+            renderGroceryList();
+            renderAIList();
         } catch (error) {
-            console.error("Error fetching from Google Sheets:", error);
+            console.error("Error fetching data:", error);
             document.getElementById('loading-indicator').innerText = "Failed to load database. Please check connection.";
         }
     }
 
-    async function pushItemToSheet(itemName, buttonElement) {
-        buttonElement.classList.add('loading');
-        buttonElement.disabled = true;
-
-        try {
-            // Uncomment below when real URL is provided to push to Google Sheet database
-            /*
-            await fetch(GOOGLE_SHEET_API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'addItem', name: itemName }),
-                headers: { 'Content-Type': 'application/json' }
-            });
-            */
-            
-            // Simulating network request to Sheet
-            return new Promise(resolve => setTimeout(resolve, 600)); 
-        } catch (error) {
-            console.error("Error saving to Sheet:", error);
-            alert("Failed to save to database.");
-            buttonElement.classList.remove('loading');
-            buttonElement.disabled = false;
-            throw error;
-        }
-    }
-
-    // ==========================================
-    // RENDERING & LOGIC
-    // ==========================================
     function renderGroceryList() {
         const container = document.getElementById('main-grocery-list');
         container.innerHTML = '';
 
         databaseItems.forEach(item => {
             const div = document.createElement('div');
-            div.className = `list-item ${item.selected ? 'selected' : ''}`;
-            div.onclick = () => {
-                item.selected = !item.selected;
-                renderGroceryList();
-            };
+            div.className = `list-item-container ${item.selected ? 'selected' : ''}`;
 
             const checkIcon = item.selected ? '✓' : '';
             const recentFlag = item.orderedInLast30Days ? '<div class="item-meta">Ordered in last 30 days</div>' : '';
 
+            const optionsHTML = (quantityOptions[item.unitType] || quantityOptions['Count'])
+                .map(opt => `<option value="${opt}" ${item.currentQuantity === opt ? 'selected' : ''}>${opt}</option>`)
+                .join('');
+
             div.innerHTML = `
-                <div class="icon-container">${checkIcon}</div>
-                <div class="item-details">
-                    <div class="item-name">${item.name}</div>
-                    ${recentFlag}
+                <div class="list-item" onclick="toggleSelection(${item.id})">
+                    <div class="icon-container">${checkIcon}</div>
+                    <div class="item-details">
+                        <div class="item-name">${item.name}</div>
+                        ${recentFlag}
+                    </div>
+                </div>
+                <div class="quantity-selector">
+                    <select onchange="updateQuantity(${item.id}, this.value)">
+                        ${optionsHTML}
+                    </select>
                 </div>
             `;
             container.appendChild(div);
         });
+    }
+
+    function toggleSelection(id) {
+        const item = databaseItems.find(i => i.id === id);
+        if (item) {
+            item.selected = !item.selected;
+            renderGroceryList();
+        }
+    }
+
+    function updateQuantity(id, value) {
+        const item = databaseItems.find(i => i.id === id);
+        if (item) {
+            item.currentQuantity = value;
+        }
     }
 
     function renderAIList() {
@@ -400,24 +272,19 @@
 
         aiRecommendations.forEach(item => {
             const div = document.createElement('div');
-            div.className = 'list-item';
+            div.className = 'list-item-container';
             
             div.innerHTML = `
-                <div class="icon-container" style="color: #1976D2;">✨</div>
-                <div class="item-details">
-                    <div class="item-name">${item.name}</div>
-                    <div class="item-meta ai-reason">${item.contextReason}</div>
+                <div class="list-item">
+                    <div class="icon-container" style="color: #1976D2;">✨</div>
+                    <div class="item-details">
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-meta ai-reason">${item.contextReason}</div>
+                    </div>
+                    <button class="bookmark-btn" onclick="handleBookmarkClick(${item.id}, this)">➕</button>
                 </div>
-                <button class="bookmark-btn" id="btn-add-${item.id}" title="Add to Database">➕</button>
             `;
             container.appendChild(div);
-
-            // Attach click event separately to handle the async DB push
-            const addBtn = div.querySelector('.bookmark-btn');
-            addBtn.onclick = (e) => {
-                e.stopPropagation(); // Prevent row click
-                handleBookmarkClick(item.id, addBtn);
-            };
         });
     }
 
@@ -425,59 +292,67 @@
         const index = aiRecommendations.findIndex(i => i.id === id);
         if (index === -1) return;
 
+        buttonElement.style.opacity = '0.5';
+        buttonElement.disabled = true;
+
         const aiItem = aiRecommendations[index];
 
-        // 1. Push to Google Sheets (Cookbook addition style)
-        await pushItemToSheet(aiItem.name, buttonElement);
+        try {
+            await fetch(GOOGLE_SHEET_API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'addItem', name: aiItem.name }),
+            });
 
-        // 2. Remove from AI list
-        aiRecommendations.splice(index, 1);
-        
-        // 3. Add to local Database list & auto-select
-        databaseItems.unshift({
-            id: Date.now(),
-            name: aiItem.name,
-            orderedInLast30Days: false,
-            selected: true,
-            count: 0
-        });
+            aiRecommendations.splice(index, 1);
+            
+            databaseItems.unshift({
+                id: Date.now(),
+                name: aiItem.name,
+                orderedInLast30Days: false,
+                selected: true,
+                unitType: 'Count',
+                currentQuantity: '1',
+                count: 0
+            });
 
-        // 4. Re-render
-        renderGroceryList();
-        renderAIList();
-    }
-
-    function updateSubmitButtonState() {
-        const btn = document.getElementById('submit-btn');
-        if (!selectedContactPhone) {
-            btn.disabled = true;
-            btn.innerText = "Select a contact to share";
-        } else {
-            btn.disabled = false;
-            btn.innerText = "Submit & Share to WhatsApp";
+            renderGroceryList();
+            renderAIList();
+        } catch (e) {
+            alert("Failed to add to database.");
+            buttonElement.style.opacity = '1';
+            buttonElement.disabled = false;
         }
     }
 
-    // ==========================================
-    // WHATSAPP SUBMISSION
-    // ==========================================
-    function submitToWhatsApp() {
-        if (!selectedContactPhone) {
-            alert("Please select or add a contact first.");
-            return;
-        }
-
+    async function submitToWhatsApp() {
         const selectedItems = databaseItems.filter(i => i.selected);
         if (selectedItems.length === 0) {
-            alert("Please select at least one item to share.");
+            alert("Please select at least one item.");
             return;
         }
 
-        const formattedItems = selectedItems.map(i => `✅ ${i.name}`).join('%0A');
-        const textMessage = `Hi! Here is the monthly grocery list:%0A%0A${formattedItems}`;
-        
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=${selectedContactPhone}&text=${textMessage}`;
-        window.open(whatsappUrl, '_blank');
+        const btn = document.getElementById('submit-btn');
+        btn.innerText = "Processing...";
+        btn.disabled = true;
+
+        const payload = selectedItems.map(i => ({ name: i.name, quantity: i.currentQuantity }));
+
+        try {
+            await fetch(GOOGLE_SHEET_API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'submit', items: payload }),
+            });
+            
+            const formattedItems = selectedItems.map(i => `✅ ${i.name} - ${i.currentQuantity}`).join('%0A');
+            const textMessage = `Hi! Here is the monthly grocery list:%0A%0A${formattedItems}`;
+            
+            window.open(`whatsapp://send?text=${textMessage}`, '_blank');
+        } catch (error) {
+            alert("Failed to sync with database. Please try again.");
+        } finally {
+            btn.innerText = "Submit & Share to WhatsApp";
+            btn.disabled = false;
+        }
     }
 </script>
 
