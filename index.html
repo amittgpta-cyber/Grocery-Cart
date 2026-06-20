@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Household Hub</title>
     <style>
-        /* CORE VARIABLES & CHAMELEON THEMING */
         :root {
             --bg-color: #F5F7FA;
             --surface-color: #FFFFFF;
@@ -44,7 +43,6 @@
         h1, h2, h3 { margin: 0; }
         .container { padding: 24px 20px; max-width: 600px; margin: 0 auto; }
 
-        /* LIQUID GLASS FLOATING NAV BAR */
         .bottom-nav {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 400px;
@@ -62,7 +60,6 @@
 
         .nav-item.active { background: var(--primary-accent); color: #FFFFFF; }
 
-        /* UI TRANSITIONS */
         .page { display: none; animation: fadePeek 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .page.active { display: block; }
 
@@ -71,7 +68,6 @@
             to { opacity: 1; transform: translateX(0) scale(1); }
         }
 
-        /* MEAL CARDS */
         .meal-card {
             background: var(--surface-color); border: 1px solid var(--border-color);
             border-radius: 24px; padding: 20px; margin-bottom: 20px;
@@ -88,7 +84,6 @@
         }
         .smart-cart-btn:active { transform: scale(0.85); background: var(--primary-accent); color: white; }
 
-        /* GROCERY CART LIST */
         .section-title { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: 24px 0 12px 0; }
         .grocery-item {
             background: var(--surface-color); border-radius: 16px; padding: 16px; margin-bottom: 12px;
@@ -107,7 +102,6 @@
         .item-name { font-size: 18px; font-weight: 500; }
         .item-flag { font-size: 12px; color: #F57C00; margin-top: 4px; font-weight: 600; }
 
-        /* QUANTITY SELECTOR BADGE */
         .qty-badge {
             background: rgba(76, 175, 80, 0.15); color: var(--primary-accent);
             padding: 8px 16px; border-radius: 12px; font-size: 14px; font-weight: bold;
@@ -115,7 +109,6 @@
         }
         .qty-badge:active { background: var(--primary-accent); color: white; }
 
-        /* SMART BOTTOM SHEET (GLASSMORPHISM) */
         .picker-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
@@ -143,24 +136,51 @@
             padding: 18px; border-radius: 16px; font-size: 18px; font-weight: bold;
             margin-top: 24px; cursor: pointer; box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
         }
+
+        /* GUIDED SHOPPING PING-PONG UI */
+        .guided-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-color); z-index: 3000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+            padding: 24px; text-align: center;
+        }
+        .guided-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .shopping-progress { color: var(--text-muted); font-size: 16px; margin-bottom: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .shopping-item-name { font-size: 36px; font-weight: bold; margin-bottom: 48px; color: var(--text-main); }
+        
+        .action-btn { background: var(--primary-accent); color: white; border: none; width: 100%; max-width: 350px; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: bold; margin-bottom: 16px; cursor: pointer; box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3); transition: transform 0.2s; }
+        .action-btn:active { transform: scale(0.95); }
+        
+        .secondary-btn { background: transparent; color: var(--text-main); border: 2px solid var(--border-color); width: 100%; max-width: 350px; padding: 20px; border-radius: 16px; font-size: 18px; font-weight: bold; cursor: pointer; transition: transform 0.2s; }
+        .secondary-btn:active { transform: scale(0.95); background: var(--surface-color); }
+        
+        .close-shopping { position: absolute; top: 40px; right: 24px; background: none; border: none; font-size: 32px; color: var(--text-muted); cursor: pointer; }
     </style>
 </head>
 <body>
-    <!-- OVERLAYS FOR QUANTITY PICKER -->
     <div class="picker-overlay" id="picker-overlay" onclick="closePicker()"></div>
     <div class="bottom-sheet" id="bottom-sheet">
         <h2 id="picker-title" style="text-align: center; margin-bottom: 8px;">Select Quantity</h2>
         <div class="unit-grid" id="picker-grid"></div>
     </div>
 
+    <div class="guided-overlay" id="guided-overlay">
+        <button class="close-shopping" onclick="closeGuidedShopping()">×</button>
+        <div class="shopping-progress" id="shopping-progress">Item 1 of 3</div>
+        <div class="shopping-item-name" id="shopping-item-name">1 kg Potatoes</div>
+        
+        <button class="action-btn" onclick="searchCurrentItem()">1. Open in Swiggy</button>
+        <button class="secondary-btn" onclick="nextShoppingItem()">2. Mark Done & Next</button>
+    </div>
+
     <div class="container">
-        <!-- PAGE 1: MEAL PLANNER -->
         <div id="page-meals" class="page active">
             <h1 style="margin-bottom: 24px;">This Week's Plan</h1>
             <div id="meal-list"></div>
         </div>
 
-        <!-- PAGE 2: GROCERY CART -->
         <div id="page-cart" class="page">
             <h1 style="margin-bottom: 12px;">Grocery Cart</h1>
             <p style="color: var(--text-muted); margin-bottom: 24px;">Tap amounts to edit units.</p>
@@ -171,18 +191,16 @@
             <div class="section-title">Recently Bought</div>
             <div id="dimmed-items"></div>
 
-            <button class="swiggy-btn" onclick="sendToSwiggy()">🚀 Send to Swiggy Instamart</button>
+            <button class="swiggy-btn" onclick="startGuidedShopping()">🛒 Start Guided Shopping</button>
         </div>
     </div>
 
-    <!-- FLOATING BOTTOM NAV -->
     <div class="bottom-nav">
         <button class="nav-item active" id="nav-meals" onclick="switchTab('meals')">Meal Plan</button>
         <button class="nav-item" id="nav-cart" onclick="switchTab('cart')">Cart</button>
     </div>
 
     <script>
-        // SMART UNIT DICTIONARY (AI maps these instantly)
         const UNIT_TYPES = {
             "Milk": ["500 ml", "1 L", "2 L"],
             "Curd": ["200 g", "500 g", "1 kg"],
@@ -207,6 +225,8 @@
         };
 
         let currentEditIndex = null;
+        let shoppingQueue = [];
+        let shoppingIndex = 0;
 
         function initApp() { renderMeals(); renderCart(); }
 
@@ -255,9 +275,8 @@
             renderCart();
         }
 
-        /* DYNAMIC BOTTOM SHEET PICKER LOGIC */
         function openPicker(event, index) {
-            event.stopPropagation(); // Prevents checking/unchecking the box
+            event.stopPropagation();
             triggerHaptic();
             currentEditIndex = index;
             const item = DB.cart[index];
@@ -314,13 +333,53 @@
             document.getElementById('dimmed-items').innerHTML = dimmedHtml || '<p style="color:var(--text-muted)">No recently bought items.</p>';
         }
 
-        function sendToSwiggy() {
+        /* PING-PONG LOGIC */
+        function startGuidedShopping() {
             triggerHaptic();
-            const itemsToBuy = DB.cart.filter(item => item.checked).map(item => `${item.quantity} ${item.name}`);
-            if(itemsToBuy.length === 0) return alert("Select at least one item.");
+            shoppingQueue = DB.cart.filter(item => item.checked);
+            if(shoppingQueue.length === 0) return alert("Select at least one item.");
             
-            const searchQuery = encodeURIComponent(itemsToBuy.join(" "));
+            shoppingIndex = 0;
+            updateGuidedUI();
+            document.getElementById('guided-overlay').classList.add('active');
+        }
+
+        function updateGuidedUI() {
+            const item = shoppingQueue[shoppingIndex];
+            document.getElementById('shopping-progress').innerText = `Item ${shoppingIndex + 1} of ${shoppingQueue.length}`;
+            document.getElementById('shopping-item-name').innerText = `${item.quantity} ${item.name}`;
+        }
+
+        function searchCurrentItem() {
+            triggerHaptic();
+            const item = shoppingQueue[shoppingIndex];
+            const searchQuery = encodeURIComponent(`${item.name}`);
             window.location.href = `swiggy://instamart/search?query=${searchQuery}`;
+        }
+
+        function nextShoppingItem() {
+            triggerHaptic();
+            const item = shoppingQueue[shoppingIndex];
+            const dbIndex = DB.cart.findIndex(c => c.name === item.name);
+            
+            if(dbIndex !== -1) {
+                DB.cart[dbIndex].checked = false;
+                DB.cart[dbIndex].recent = true;
+                DB.cart[dbIndex].flag = "Just Bought";
+            }
+
+            shoppingIndex++;
+            if(shoppingIndex >= shoppingQueue.length) {
+                closeGuidedShopping();
+            } else {
+                updateGuidedUI();
+            }
+        }
+
+        function closeGuidedShopping() {
+            triggerHaptic();
+            document.getElementById('guided-overlay').classList.remove('active');
+            renderCart();
         }
 
         initApp();
