@@ -421,7 +421,6 @@
             updateGuidedUI();
             document.getElementById('guided-overlay').classList.add('active');
 
-            // Automatically open Swiggy for the FIRST item instantly
             const firstItem = shoppingQueue[0];
             const searchQuery = encodeURIComponent(firstItem.name);
             setTimeout(() => {
@@ -438,7 +437,6 @@
         function markDoneAndNext() {
             triggerHaptic();
             
-            // Mark current item done
             const currentItem = shoppingQueue[shoppingIndex];
             const dbIndex = DB.cart.findIndex(c => c.name === currentItem.name);
             
@@ -448,7 +446,6 @@
                 DB.cart[dbIndex].flag = "Just Bought";
             }
 
-            // Move to next item
             shoppingIndex++;
             
             if(shoppingIndex >= shoppingQueue.length) {
@@ -456,7 +453,6 @@
                 syncCartToBackend();
             } else {
                 updateGuidedUI();
-                // Automatically open Swiggy for the NEXT item instantly
                 const nextItem = shoppingQueue[shoppingIndex];
                 const searchQuery = encodeURIComponent(nextItem.name);
                 setTimeout(() => {
