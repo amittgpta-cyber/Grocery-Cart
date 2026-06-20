@@ -3,24 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Household Hub: Meals & Groceries</title>
+    <title>Household Hub: MealSync & Groceries</title>
     <style>
-        /* =========================================
-           1. CORE VARIABLES & CHAMELEON THEMING
-           ========================================= */
         :root {
             --bg-color: #F5F7FA;
             --surface-color: #FFFFFF;
             --text-main: #1A1C1E;
             --text-muted: #73777F;
             --primary-accent: #2E7D32; 
-            --secondary-accent: #FF9800; /* Chef Special Orange */
+            --secondary-accent: #FF9800; 
             --glass-bg: rgba(255, 255, 255, 0.85);
             --border-color: rgba(0, 0, 0, 0.08);
             --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
         }
 
-        /* Pure AMOLED Black for iPhone 16 / Pixel 9 Pro */
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg-color: #000000;
@@ -36,8 +32,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--bg-color); color: var(--text-main);
             margin: 0; padding: 0; padding-bottom: 120px;
             transition: background-color 0.4s ease, color 0.4s ease;
             -webkit-tap-highlight-color: transparent;
@@ -47,9 +42,7 @@
         .container { padding: 24px 20px; max-width: 600px; margin: 0 auto; }
         .section-title { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: 24px 0 12px 0; font-weight: bold;}
 
-        /* =========================================
-           2. NAVIGATION (LIQUID GLASS)
-           ========================================= */
+        /* LIQUID GLASS NAV */
         .bottom-nav {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
             width: 92%; max-width: 450px;
@@ -63,48 +56,37 @@
             background: none; border: none; color: var(--text-muted);
             font-size: 15px; font-weight: 600; padding: 12px 20px; border-radius: 30px;
             cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            display: flex; align-items: center; gap: 6px;
         }
-
         .nav-item.active { background: var(--primary-accent); color: #FFFFFF; }
 
         .page { display: none; animation: fadePeek 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .page.active { display: block; }
-
         @keyframes fadePeek {
             from { opacity: 0; transform: translateX(20px) scale(0.98); }
             to { opacity: 1; transform: translateX(0) scale(1); }
         }
 
-        /* =========================================
-           3. MEALSYNC: DISCOVER & PLANNER
-           ========================================= */
+        /* MEALSYNC DISCOVER & PLANNER */
         .search-bar {
             width: 100%; padding: 16px 20px; border-radius: 16px; border: 1px solid var(--border-color);
             background: var(--surface-color); color: var(--text-main); font-size: 16px;
             margin-bottom: 24px; box-sizing: border-box; box-shadow: var(--card-shadow);
         }
 
-        /* Horizontal Scroll for Chef Specials */
-        .horizontal-scroll {
-            display: flex; overflow-x: auto; gap: 16px; padding-bottom: 16px;
-            scrollbar-width: none; -ms-overflow-style: none;
-        }
+        .horizontal-scroll { display: flex; overflow-x: auto; gap: 16px; padding-bottom: 16px; scrollbar-width: none; }
         .horizontal-scroll::-webkit-scrollbar { display: none; }
 
         .recipe-card {
             min-width: 200px; background: var(--surface-color); border: 1px solid var(--border-color);
-            border-radius: 20px; padding: 20px; box-shadow: var(--card-shadow);
-            position: relative;
+            border-radius: 20px; padding: 20px; box-shadow: var(--card-shadow); position: relative;
         }
         .chef-badge {
             position: absolute; top: -10px; right: -10px; background: var(--secondary-accent);
             color: white; font-size: 12px; font-weight: bold; padding: 6px 12px; border-radius: 12px;
         }
 
-        /* Weekly Planner List */
         .day-group { margin-bottom: 24px; }
-        .day-title { font-size: 18px; font-weight: bold; color: var(--text-main); margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;}
+        .day-title { font-size: 18px; font-weight: bold; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;}
         
         .meal-card {
             background: var(--surface-color); border: 1px solid var(--border-color);
@@ -117,13 +99,11 @@
         .smart-cart-btn {
             background: rgba(76, 175, 80, 0.15); color: var(--primary-accent); border: none;
             width: 48px; height: 48px; border-radius: 24px; font-size: 20px;
-            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
         .smart-cart-btn:active { transform: scale(0.85); background: var(--primary-accent); color: white; }
 
-        /* =========================================
-           4. SMART GROCERY CART
-           ========================================= */
+        /* GROCERY CART */
         .grocery-item {
             background: var(--surface-color); border-radius: 16px; padding: 16px; margin-bottom: 12px;
             display: flex; align-items: center; border: 1px solid var(--border-color);
@@ -133,7 +113,6 @@
         .checkbox {
             width: 24px; height: 24px; border: 2px solid var(--primary-accent); border-radius: 8px;
             margin-right: 16px; display: flex; align-items: center; justify-content: center; color: transparent;
-            transition: all 0.2s;
         }
         .grocery-item.checked .checkbox { background: var(--primary-accent); color: white; }
         
@@ -144,8 +123,7 @@
 
         .qty-badge {
             background: rgba(76, 175, 80, 0.15); color: var(--primary-accent);
-            padding: 8px 16px; border-radius: 12px; font-size: 14px; font-weight: bold;
-            cursor: pointer;
+            padding: 8px 16px; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer;
         }
 
         .swiggy-btn {
@@ -154,9 +132,7 @@
             margin-top: 24px; cursor: pointer; box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
         }
 
-        /* =========================================
-           5. OVERLAYS & BOTTOM SHEETS
-           ========================================= */
+        /* OVERLAYS & BOTTOM SHEETS */
         .overlay-bg {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
@@ -168,7 +144,7 @@
             position: fixed; bottom: -100%; left: 0; right: 0;
             background: var(--surface-color); border-radius: 32px 32px 0 0; padding: 32px 24px 60px 24px;
             transition: bottom 0.4s cubic-bezier(0.25, 1, 0.5, 1); z-index: 2001;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.2); border-top: 1px solid var(--border-color);
+            border-top: 1px solid var(--border-color);
         }
         .bottom-sheet.active { bottom: 0; }
 
@@ -178,7 +154,7 @@
             padding: 18px 0; border-radius: 16px; font-size: 16px; font-weight: 600; cursor: pointer;
         }
 
-        /* GUIDED SHOPPING PING-PONG */
+        /* GUIDED SHOPPING */
         .guided-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: var(--bg-color); z-index: 3000;
@@ -193,18 +169,20 @@
         .action-btn { background: var(--primary-accent); color: white; border: none; width: 100%; max-width: 350px; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: bold; margin-bottom: 16px; cursor: pointer; }
         .secondary-btn { background: transparent; color: var(--text-main); border: 2px solid var(--border-color); width: 100%; max-width: 350px; padding: 20px; border-radius: 16px; font-size: 18px; font-weight: bold; cursor: pointer; }
         .close-shopping { position: absolute; top: 40px; right: 24px; background: none; border: none; font-size: 32px; color: var(--text-muted); cursor: pointer; }
+        
+        #sync-status {
+            text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 12px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- OVERLAYS -->
     <div class="overlay-bg" id="picker-overlay" onclick="closePicker()"></div>
     <div class="bottom-sheet" id="bottom-sheet">
         <h2 id="picker-title" style="text-align: center; margin-bottom: 8px;">Select Quantity</h2>
         <div class="unit-grid" id="picker-grid"></div>
     </div>
 
-    <!-- PING-PONG GUIDED SHOPPING -->
     <div class="guided-overlay" id="guided-overlay">
         <button class="close-shopping" onclick="closeGuidedShopping()">×</button>
         <div class="shopping-progress" id="shopping-progress">Item 1 of X</div>
@@ -215,31 +193,22 @@
 
     <div class="container">
         
-        <!-- PAGE 1: MEALSYNC DISCOVER -->
         <div id="page-discover" class="page active">
             <h1 style="margin-bottom: 24px;">Discover</h1>
             <input type="text" class="search-bar" placeholder="🔍 Search recipes, cuisines...">
             
             <div class="section-title">Chef Specials</div>
-            <div class="horizontal-scroll" id="chef-specials-list">
-                <!-- Injected via JS -->
-            </div>
+            <div class="horizontal-scroll" id="chef-specials-list"></div>
 
             <div class="section-title">All Recipes</div>
-            <div id="all-recipes-list">
-                <!-- Injected via JS -->
-            </div>
+            <div id="all-recipes-list"></div>
         </div>
 
-        <!-- PAGE 2: MEALSYNC PLANNER -->
         <div id="page-planner" class="page">
             <h1 style="margin-bottom: 24px;">Weekly Calendar</h1>
-            <div id="weekly-calendar">
-                <!-- Injected via JS -->
-            </div>
+            <div id="weekly-calendar"></div>
         </div>
 
-        <!-- PAGE 3: SMART GROCERY CART -->
         <div id="page-cart" class="page">
             <h1 style="margin-bottom: 12px;">Grocery Cart</h1>
             <p style="color: var(--text-muted); margin-bottom: 24px;">Tap amounts to edit units.</p>
@@ -251,11 +220,11 @@
             <div id="dimmed-items"></div>
 
             <button class="swiggy-btn" onclick="startGuidedShopping()">🛒 Start Guided Shopping</button>
+            <div id="sync-status">Status: Connecting to Database...</div>
         </div>
 
     </div>
 
-    <!-- FLOATING BOTTOM NAV -->
     <div class="bottom-nav">
         <button class="nav-item active" id="nav-discover" onclick="switchTab('discover')">💡 Discover</button>
         <button class="nav-item" id="nav-planner" onclick="switchTab('planner')">📅 Plan</button>
@@ -263,45 +232,58 @@
     </div>
 
     <script>
-        /* =========================================
-           DATA LAYER (Simulated Google Sheet)
-           ========================================= */
+        // REPLACE THIS WITH YOUR DEPLOYED GOOGLE APPS SCRIPT URL
+        const GOOGLE_WEB_APP_URL = "YOUR_GOOGLE_SCRIPT_URL_HERE";
+
         const UNIT_TYPES = {
             "Milk": ["500 ml", "1 L", "2 L"],
             "Curd": ["200 g", "500 g", "1 kg"],
-            "Potatoes": ["500 g", "1 kg", "2 kg"],
+            "Potatoes": ["500 g", "1 kg", "2 kg", "5 kg", "10 kg"],
             "Capsicum": ["250 g", "500 g", "1 kg"],
-            "Paneer": ["200 g", "500 g"],
-            "default": ["1", "2", "3"]
+            "Flour": ["1 kg", "2 kg", "5 kg", "10 kg"],
+            "Eggs": ["6 Pack", "12 Pack", "30 Pack"],
+            "default": ["1", "2", "3", "4", "5"]
         };
 
-        const DB = {
-            recipesMaster: [
-                { id: "r1", name: "Aloo Shimla Mirch", tags: "Dry Veg", isChefSpecial: true, ingredients: [{name: "Potatoes", defaultQty: "1 kg"}, {name: "Capsicum", defaultQty: "500 g"}] },
-                { id: "r2", name: "Paneer Do Pyaza", tags: "Gravy", isChefSpecial: false, ingredients: [{name: "Paneer", defaultQty: "500 g"}, {name: "Onions", defaultQty: "1 kg"}, {name: "Curd", defaultQty: "500 g"}] },
-                { id: "r3", name: "Filter Coffee", tags: "Beverage", isChefSpecial: true, ingredients: [{name: "Milk", defaultQty: "1 L"}, {name: "Coffee Powder", defaultQty: "250 g"}] }
-            ],
-            plannedMeals: {
-                "Monday": [],
-                "Tuesday": ["Aloo Shimla Mirch"],
-                "Wednesday": [],
-                "Thursday": ["Paneer Do Pyaza"],
-                "Friday": []
-            },
-            orderHistory: [
-                { item: "Curd", date: "2 days ago" },
-                { item: "Onions", date: "4 days ago" }
-            ],
+        // Application State
+        let DB = {
+            recipesMaster: [],
+            plannedMeals: {},
+            orderHistory: [],
             cart: []
         };
 
-        /* =========================================
-           CORE LOGIC
-           ========================================= */
-        function initApp() { 
+        async function initApp() { 
+            await fetchDatabaseSync();
             renderDiscover(); 
             renderPlanner(); 
             renderCart(); 
+        }
+
+        async function fetchDatabaseSync() {
+            try {
+                document.getElementById('sync-status').innerText = "Status: Syncing with Google Sheets...";
+                if(GOOGLE_WEB_APP_URL !== "YOUR_GOOGLE_SCRIPT_URL_HERE") {
+                    const response = await fetch(`${GOOGLE_WEB_APP_URL}?action=getAllData`);
+                    const data = await response.json();
+                    DB = data; 
+                } else {
+                    // Fallback local state for initial testing before script deployment
+                    DB = {
+                        recipesMaster: [
+                            { id: "r1", name: "Aloo Shimla Mirch", tags: "Dry Veg", isChefSpecial: true, ingredients: [{name: "Potatoes", defaultQty: "1 kg"}, {name: "Capsicum", defaultQty: "500 g"}, {name: "Curd", defaultQty: "500 g"}] },
+                            { id: "r2", name: "Paneer Do Pyaza", tags: "Gravy", isChefSpecial: false, ingredients: [{name: "Paneer", defaultQty: "500 g"}, {name: "Onions", defaultQty: "1 kg"}] }
+                        ],
+                        plannedMeals: { "Tuesday": ["Aloo Shimla Mirch"], "Thursday": ["Paneer Do Pyaza"] },
+                        orderHistory: [{ item: "Curd", date: "2 days ago" }],
+                        cart: []
+                    };
+                }
+                document.getElementById('sync-status').innerText = "Status: Synced Successfully";
+            } catch (error) {
+                document.getElementById('sync-status').innerText = "Status: Offline (Using Local Cache)";
+                console.error("Database sync failed", error);
+            }
         }
 
         function triggerHaptic() { if (navigator.vibrate) navigator.vibrate(15); }
@@ -313,9 +295,8 @@
             document.getElementById(`nav-${tabId}`).classList.add('active');
         }
 
-        /* 1. RENDER DISCOVER TAB */
         function renderDiscover() {
-            const specialsHtml = DB.recipesMaster.filter(r => r.isChefSpecial).map(r => `
+            document.getElementById('chef-specials-list').innerHTML = DB.recipesMaster.filter(r => r.isChefSpecial).map(r => `
                 <div class="recipe-card">
                     <div class="chef-badge">Chef Special</div>
                     <h2 style="font-size: 18px; margin-bottom: 8px;">${r.name}</h2>
@@ -323,30 +304,26 @@
                     <button class="smart-cart-btn" style="width: 100%; border-radius: 12px;" onclick="breakdownRecipe('${r.id}')">Add to Cart</button>
                 </div>
             `).join('');
-            document.getElementById('chef-specials-list').innerHTML = specialsHtml;
 
-            const allHtml = DB.recipesMaster.map(r => `
+            document.getElementById('all-recipes-list').innerHTML = DB.recipesMaster.map(r => `
                 <div class="meal-card">
                     <div class="meal-info"><h2>${r.name}</h2><p>${r.tags}</p></div>
                     <button class="smart-cart-btn" onclick="breakdownRecipe('${r.id}')">🛒</button>
                 </div>
             `).join('');
-            document.getElementById('all-recipes-list').innerHTML = allHtml;
         }
 
-        /* 2. RENDER PLANNER TAB */
         function renderPlanner() {
             let plannerHtml = '';
             for (const [day, meals] of Object.entries(DB.plannedMeals)) {
                 plannerHtml += `<div class="day-group"><div class="day-title">${day}</div>`;
-                if (meals.length === 0) {
-                    plannerHtml += `<p style="color: var(--text-muted); font-size: 14px; margin-left: 8px;">No meals planned.</p>`;
-                } else {
+                if (!meals || meals.length === 0) plannerHtml += `<p style="color: var(--text-muted); font-size: 14px; margin-left: 8px;">No meals planned.</p>`;
+                else {
                     meals.forEach(mealName => {
                         const recipe = DB.recipesMaster.find(r => r.name === mealName);
                         plannerHtml += `
                             <div class="meal-card">
-                                <div class="meal-info"><h2>${mealName}</h2><p>Planned for Dinner</p></div>
+                                <div class="meal-info"><h2>${mealName}</h2><p>Dinner</p></div>
                                 <button class="smart-cart-btn" onclick="breakdownRecipe('${recipe.id}')">🛒</button>
                             </div>
                         `;
@@ -354,10 +331,9 @@
                 }
                 plannerHtml += `</div>`;
             }
-            document.getElementById('weekly-calendar').innerHTML = plannerHtml;
+            document.getElementById('weekly-calendar').innerHTML = plannerHtml || '<p style="color: var(--text-muted);">No data found.</p>';
         }
 
-        /* 3. RECIPE BREAKDOWN (7-DAY MEMORY) */
         function breakdownRecipe(recipeId) {
             triggerHaptic();
             const recipe = DB.recipesMaster.find(r => r.id === recipeId);
@@ -375,15 +351,16 @@
             });
             renderCart();
             switchTab('cart');
+            syncCartToBackend();
         }
 
         function toggleItem(index) {
             triggerHaptic();
             DB.cart[index].checked = !DB.cart[index].checked;
             renderCart();
+            syncCartToBackend();
         }
 
-        /* 4. QUANTITY SELECTOR BOTTOM SHEET */
         let currentEditIndex = null;
         function openPicker(event, index) {
             event.stopPropagation();
@@ -406,6 +383,7 @@
             DB.cart[currentEditIndex].quantity = qty;
             closePicker();
             renderCart();
+            syncCartToBackend();
         }
 
         function closePicker() {
@@ -413,7 +391,6 @@
             document.getElementById('bottom-sheet').classList.remove('active');
         }
 
-        /* 5. RENDER CART */
         function renderCart() {
             let activeHtml = '', dimmedHtml = '';
 
@@ -440,7 +417,6 @@
             document.getElementById('dimmed-items').innerHTML = dimmedHtml || '<p style="color:var(--text-muted)">No recently bought items.</p>';
         }
 
-        /* 6. GUIDED SHOPPING (PING-PONG) */
         let shoppingQueue = [];
         let shoppingIndex = 0;
 
@@ -481,6 +457,7 @@
             shoppingIndex++;
             if(shoppingIndex >= shoppingQueue.length) {
                 closeGuidedShopping();
+                syncCartToBackend();
             } else {
                 updateGuidedUI();
             }
@@ -492,7 +469,19 @@
             renderCart();
         }
 
-        initApp();
+        async function syncCartToBackend() {
+            if(GOOGLE_WEB_APP_URL === "YOUR_GOOGLE_SCRIPT_URL_HERE") return;
+            try {
+                await fetch(GOOGLE_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'syncCart', cart: DB.cart })
+                });
+            } catch(e) {
+                console.error("Background sync failed", e);
+            }
+        }
+
+        window.onload = initApp;
     </script>
 </body>
 </html>
