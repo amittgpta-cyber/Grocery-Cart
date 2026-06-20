@@ -2,568 +2,328 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monthly Grocery List</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Household Hub</title>
     <style>
+        /* CORE VARIABLES & CHAMELEON THEMING */
         :root {
-            --primary-color: #2E7D32;
-            --bg-selected: #E8F5E9;
-            --bg-prev-ordered: #E3F2FD;
-            --text-prev-ordered: #1565C0;
-            --ai-text: #1976D2;
-            --btn-bg: #4CAF50;
-            --btn-toggle: #1976D2;
-            --btn-reorder: #FF9800;
-            --text-main: #333333;
-            --text-muted: #757575;
-            --border-color: #eeeeee;
+            --bg-color: #F5F7FA;
+            --surface-color: #FFFFFF;
+            --text-main: #1A1C1E;
+            --text-muted: #73777F;
+            --primary-accent: #2E7D32; 
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --border-color: rgba(0, 0, 0, 0.08);
+            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            --dimmed-text: #A0A0A0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #000000;
+                --surface-color: #1A1A1A; 
+                --text-main: #E2E2E2;
+                --text-muted: #8E918F;
+                --primary-accent: #4CAF50; 
+                --glass-bg: rgba(26, 26, 26, 0.85);
+                --border-color: rgba(255, 255, 255, 0.1);
+                --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+                --dimmed-text: #5A5A5A;
+            }
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 16px;
-            background-color: #f5f5f5;
+            background-color: var(--bg-color);
             color: var(--text-main);
+            margin: 0; padding: 0; padding-bottom: 100px;
+            transition: background-color 0.4s ease, color 0.4s ease;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .app-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        h1, h2, h3 { margin: 0; }
+        .container { padding: 24px 20px; max-width: 600px; margin: 0 auto; }
+
+        /* LIQUID GLASS FLOATING NAV BAR */
+        .bottom-nav {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 400px;
+            background: var(--glass-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-color); border-radius: 40px;
+            display: flex; justify-content: space-around; padding: 12px 8px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.15); z-index: 1000;
         }
 
-        h1 {
-            font-size: 24px;
-            margin-top: 0;
-            margin-bottom: 24px;
+        .nav-item {
+            background: none; border: none; color: var(--text-muted);
+            font-size: 16px; font-weight: 600; padding: 12px 24px; border-radius: 30px;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        h2 {
-            font-size: 16px;
-            margin-top: 32px;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--border-color);
+        .nav-item.active { background: var(--primary-accent); color: #FFFFFF; }
+
+        /* UI TRANSITIONS */
+        .page { display: none; animation: fadePeek 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .page.active { display: block; }
+
+        @keyframes fadePeek {
+            from { opacity: 0; transform: translateX(20px) scale(0.98); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
         }
 
-        .list-item-container {
-            border-bottom: 1px solid var(--border-color);
+        /* MEAL CARDS */
+        .meal-card {
+            background: var(--surface-color); border: 1px solid var(--border-color);
+            border-radius: 24px; padding: 20px; margin-bottom: 20px;
+            box-shadow: var(--card-shadow); display: flex; align-items: center; justify-content: space-between;
         }
 
-        .list-item {
-            display: flex;
-            align-items: center;
-            padding: 16px;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: background-color 0.2s ease;
-        }
+        .meal-info h2 { font-size: 20px; margin-bottom: 6px; }
+        .meal-info p { color: var(--text-muted); font-size: 14px; }
 
-        .list-item-container.selected {
-            background-color: var(--bg-selected);
+        .smart-cart-btn {
+            background: rgba(76, 175, 80, 0.15); color: var(--primary-accent); border: none;
+            width: 48px; height: 48px; border-radius: 24px; font-size: 20px;
+            cursor: pointer; transition: all 0.2s;
         }
+        .smart-cart-btn:active { transform: scale(0.85); background: var(--primary-accent); color: white; }
 
-        .list-item-container.selected .item-name {
-            color: var(--primary-color);
+        /* GROCERY CART LIST */
+        .section-title { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: 24px 0 12px 0; }
+        .grocery-item {
+            background: var(--surface-color); border-radius: 16px; padding: 16px; margin-bottom: 12px;
+            display: flex; align-items: center; border: 1px solid var(--border-color);
         }
-
-        .list-item-container.prev-ordered {
-            background-color: var(--bg-prev-ordered);
-        }
+        .grocery-item.dimmed { opacity: 0.5; background: transparent; }
         
-        .list-item-container.prev-ordered .item-name {
-            color: var(--text-prev-ordered);
+        .checkbox {
+            width: 24px; height: 24px; border: 2px solid var(--primary-accent); border-radius: 8px;
+            margin-right: 16px; display: flex; align-items: center; justify-content: center; color: transparent;
         }
+        .grocery-item.checked .checkbox { background: var(--primary-accent); color: white; }
+        
+        .item-details { flex-grow: 1; display: flex; align-items: center; justify-content: space-between; }
+        .item-text-group { display: flex; flex-direction: column; }
+        .item-name { font-size: 18px; font-weight: 500; }
+        .item-flag { font-size: 12px; color: #F57C00; margin-top: 4px; font-weight: 600; }
 
-        .icon-container {
-            width: 28px;
-            height: 28px;
-            margin-right: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary-color);
-            font-weight: bold;
-            font-size: 18px;
+        /* QUANTITY SELECTOR BADGE */
+        .qty-badge {
+            background: rgba(76, 175, 80, 0.15); color: var(--primary-accent);
+            padding: 8px 16px; border-radius: 12px; font-size: 14px; font-weight: bold;
+            cursor: pointer; transition: background 0.2s;
         }
+        .qty-badge:active { background: var(--primary-accent); color: white; }
 
-        .item-details {
-            flex-grow: 1;
+        /* SMART BOTTOM SHEET (GLASSMORPHISM) */
+        .picker-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 2000;
         }
+        .picker-overlay.active { opacity: 1; pointer-events: auto; }
 
-        .item-name {
-            font-size: 16px;
-            font-weight: 500;
+        .bottom-sheet {
+            position: fixed; bottom: -100%; left: 0; right: 0;
+            background: var(--surface-color); border-radius: 32px 32px 0 0; padding: 32px 24px 60px 24px;
+            transition: bottom 0.4s cubic-bezier(0.25, 1, 0.5, 1); z-index: 2001;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.2); border-top: 1px solid var(--border-color);
         }
+        .bottom-sheet.active { bottom: 0; }
 
-        .item-meta {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 4px;
+        .unit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
+        .unit-btn {
+            background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main);
+            padding: 18px 0; border-radius: 16px; font-size: 16px; font-weight: 600; cursor: pointer;
         }
+        .unit-btn:active { background: var(--primary-accent); color: white; transform: scale(0.95); }
 
-        .quantity-selector {
-            padding: 0 16px 16px 56px;
-            display: none;
-        }
-
-        .list-item-container.selected .quantity-selector {
-            display: block;
-        }
-
-        select {
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-            width: 150px;
-        }
-
-        .ai-reason { color: var(--ai-text); }
-
-        .bookmark-btn {
-            background: none;
-            border: none;
-            color: #F57C00;
-            font-size: 24px;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-        }
-
-        .main-btn {
-            display: block;
-            width: 100%;
-            padding: 16px;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .toggle-btn {
-            background-color: var(--btn-toggle);
-            flex: 1;
-        }
-
-        .reorder-btn {
-            background-color: var(--btn-reorder);
-            flex: 1;
-        }
-
-        .submit-btn {
-            background-color: var(--btn-bg);
-            margin-top: 32px;
-        }
-
-        .submit-btn:disabled {
-            background-color: #A5D6A7;
-            cursor: not-allowed;
-        }
-
-        #loading-indicator {
-            text-align: center;
-            padding: 20px;
-            color: var(--text-muted);
-            font-style: italic;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 24px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 400px;
-            max-height: 80vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .modal-content h2 {
-            margin-top: 0;
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        #review-list-container {
-            margin: 16px 0;
-            overflow-y: auto;
-            flex-grow: 1;
-            font-size: 16px;
-            line-height: 1.8;
-            padding: 12px;
-            background: #f9f9f9;
-            border-radius: 8px;
-            border: 1px solid #eee;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: auto;
-        }
-
-        .back-btn {
-            background-color: #9E9E9E;
-            flex: 1;
-            padding: 12px;
-        }
-
-        .confirm-btn {
-            background-color: var(--btn-bg);
-            flex: 1;
-            padding: 12px;
-        }
-
-        .confirm-btn:disabled {
-            background-color: #A5D6A7;
-            cursor: not-allowed;
+        .swiggy-btn {
+            background: var(--primary-accent); color: white; border: none; width: 100%;
+            padding: 18px; border-radius: 16px; font-size: 18px; font-weight: bold;
+            margin-top: 24px; cursor: pointer; box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
         }
     </style>
 </head>
 <body>
-
-<div class="app-container">
-    <h1>Monthly Grocery List</h1>
-
-    <div id="loading-indicator">Syncing with database...</div>
-
-    <div id="main-list-container" style="display: none;">
-        
-        <div class="button-group">
-            <button class="main-btn toggle-btn" id="toggle-list-btn" onclick="toggleGroceryList()">Grocery List ▼</button>
-            <button class="main-btn reorder-btn" onclick="reorderLast()">🔁 Reorder Last</button>
-        </div>
-        
-        <div id="grocery-list-wrapper" style="display: none;">
-            <div id="main-grocery-list"></div>
-        </div>
-
-        <h2>AI Suggestions</h2>
-        <div id="ai-recommendations-list"></div>
-
-        <button class="main-btn submit-btn" onclick="openReviewModal()">Review & Share to WhatsApp</button>
+    <!-- OVERLAYS FOR QUANTITY PICKER -->
+    <div class="picker-overlay" id="picker-overlay" onclick="closePicker()"></div>
+    <div class="bottom-sheet" id="bottom-sheet">
+        <h2 id="picker-title" style="text-align: center; margin-bottom: 8px;">Select Quantity</h2>
+        <div class="unit-grid" id="picker-grid"></div>
     </div>
-</div>
 
-<div class="modal-overlay" id="review-modal">
-    <div class="modal-content">
-        <h2>Review Your List</h2>
-        <div id="review-list-container"></div>
-        <div class="modal-buttons">
-            <button class="main-btn back-btn" onclick="closeReviewModal()">Go Back & Edit</button>
-            <button class="main-btn confirm-btn" id="confirm-submit-btn" onclick="confirmAndSend()">Confirm & Send</button>
+    <div class="container">
+        <!-- PAGE 1: MEAL PLANNER -->
+        <div id="page-meals" class="page active">
+            <h1 style="margin-bottom: 24px;">This Week's Plan</h1>
+            <div id="meal-list"></div>
+        </div>
+
+        <!-- PAGE 2: GROCERY CART -->
+        <div id="page-cart" class="page">
+            <h1 style="margin-bottom: 12px;">Grocery Cart</h1>
+            <p style="color: var(--text-muted); margin-bottom: 24px;">Tap amounts to edit units.</p>
+            
+            <div class="section-title">Ready to Buy</div>
+            <div id="active-items"></div>
+
+            <div class="section-title">Recently Bought</div>
+            <div id="dimmed-items"></div>
+
+            <button class="swiggy-btn" onclick="sendToSwiggy()">🚀 Send to Swiggy Instamart</button>
         </div>
     </div>
-</div>
 
-<script>
-    const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzLVDl9SUT5exqgtteoWcDXYQRV8Xux7V7P346SWm4qQsa5-ButiXzTScBGjO9FgGLY/exec"; 
-    let databaseItems = [];
-    let currentRecommendations = [];
+    <!-- FLOATING BOTTOM NAV -->
+    <div class="bottom-nav">
+        <button class="nav-item active" id="nav-meals" onclick="switchTab('meals')">Meal Plan</button>
+        <button class="nav-item" id="nav-cart" onclick="switchTab('cart')">Cart</button>
+    </div>
 
-    const quantityOptions = {
-        'Weight': ["100g", "250g", "500g", "1kg", "2kg", "3kg", "5kg", "10kg"],
-        'Volume': ["250ml", "500ml", "1L", "2L", "5L"],
-        'Count': ["1", "2", "3", "4", "5", "6", "10", "1 Dozen", "2 Dozen"]
-    };
+    <script>
+        // SMART UNIT DICTIONARY (AI maps these instantly)
+        const UNIT_TYPES = {
+            "Milk": ["500 ml", "1 L", "2 L"],
+            "Curd": ["200 g", "500 g", "1 kg"],
+            "Eggs": ["6 Pack", "12 Pack", "30 Pack"],
+            "Potatoes": ["500 g", "1 kg", "2 kg", "5 kg", "10 kg"],
+            "Flour": ["1 kg", "2 kg", "5 kg", "10 kg"],
+            "Capsicum": ["250 g", "500 g", "1 kg"],
+            "default": ["1", "2", "3", "4", "5"]
+        };
 
-    const defaultQuantities = {
-        'Weight': '1kg',
-        'Volume': '1L',
-        'Count': '1'
-    };
+        const DB = {
+            meals: [
+                { id: 1, name: "Aloo Shimla Mirch", day: "Tuesday Dinner", tags: "Chef Special" }
+            ],
+            recipes: {
+                "Aloo Shimla Mirch": [{name: "Potatoes", defaultQty: "1 kg"}, {name: "Capsicum", defaultQty: "500 g"}, {name: "Curd", defaultQty: "500 g"}]
+            },
+            orderHistory: [
+                { item: "Curd", date: "2 days ago" }
+            ],
+            cart: []
+        };
 
-    const aiIntelligenceRules = [
-        { triggers: ["bread", "wheat flour", "maida"], suggestion: { name: "Butter", contextReason: "Usually bought with baking goods & breads" } },
-        { triggers: ["bread"], suggestion: { name: "Jam", contextReason: "Frequently purchased with Bread" } },
-        { triggers: ["milk", "curd"], suggestion: { name: "Oats", contextReason: "Pairs well with dairy" } },
-        { triggers: ["onions", "tomatoes", "potatoes"], suggestion: { name: "Coriander", contextReason: "Enhances fresh produce" } },
-        { triggers: ["onions", "tomatoes"], suggestion: { name: "Garlic", contextReason: "Often bought together" } },
-        { triggers: ["tea leaves", "coffee powder"], suggestion: { name: "Biscuits", contextReason: "Trending essential for beverages" } },
-        { triggers: ["eggs"], suggestion: { name: "Mayonnaise", contextReason: "Pairs perfectly with eggs" } },
-        { triggers: ["baby diapers"], suggestion: { name: "Baby Wipes", contextReason: "Essential baby care combo" } }
-    ];
+        let currentEditIndex = null;
 
-    window.onload = fetchDatabaseItems;
+        function initApp() { renderMeals(); renderCart(); }
 
-    async function fetchDatabaseItems() {
-        try {
-            const response = await fetch(GOOGLE_SHEET_API_URL);
-            const data = await response.json();
-            
-            databaseItems = data.map(item => ({
-                ...item, 
-                selected: false,
-                currentQuantity: item.lastQuantity || defaultQuantities[item.unitType] || '1'
-            }));
+        function triggerHaptic() { if (navigator.vibrate) navigator.vibrate(15); }
 
-            document.getElementById('loading-indicator').style.display = 'none';
-            document.getElementById('main-list-container').style.display = 'block';
-            
-            renderGroceryList();
-            updateRecommendations();
-        } catch (error) {
-            console.error("Error fetching data:", error);
-            document.getElementById('loading-indicator').innerText = "Failed to load database. Please check connection.";
-        }
-    }
-
-    function toggleGroceryList() {
-        const wrapper = document.getElementById('grocery-list-wrapper');
-        const btn = document.getElementById('toggle-list-btn');
-        if (wrapper.style.display === 'none') {
-            wrapper.style.display = 'block';
-            btn.innerText = 'Grocery List ▲';
-        } else {
-            wrapper.style.display = 'none';
-            btn.innerText = 'Grocery List ▼';
-        }
-    }
-
-    function reorderLast() {
-        let itemsSelected = false;
-        databaseItems.forEach(item => {
-            if (item.orderedInLast30Days) {
-                item.selected = true;
-                itemsSelected = true;
-            }
-        });
-
-        if (!itemsSelected) {
-            alert("No previous orders found in the last 30 days.");
-            return;
+        function switchTab(tabId) {
+            triggerHaptic();
+            document.querySelectorAll('.page, .nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`page-${tabId}`).classList.add('active');
+            document.getElementById(`nav-${tabId}`).classList.add('active');
         }
 
-        const wrapper = document.getElementById('grocery-list-wrapper');
-        const btn = document.getElementById('toggle-list-btn');
-        if (wrapper.style.display === 'none') {
-            wrapper.style.display = 'block';
-            btn.innerText = 'Grocery List ▲';
-        }
-
-        renderGroceryList();
-        updateRecommendations();
-    }
-
-    function renderGroceryList() {
-        const container = document.getElementById('main-grocery-list');
-        container.innerHTML = '';
-
-        databaseItems.forEach(item => {
-            const isPrevOrdered = item.orderedInLast30Days && !item.selected;
-            const div = document.createElement('div');
-            div.className = `list-item-container ${item.selected ? 'selected' : ''} ${isPrevOrdered ? 'prev-ordered' : ''}`;
-
-            const checkIcon = item.selected ? '✓' : '';
-            const recentFlag = item.orderedInLast30Days ? '<div class="item-meta">Ordered in last 30 days</div>' : '';
-
-            const optionsHTML = (quantityOptions[item.unitType] || quantityOptions['Count'])
-                .map(opt => `<option value="${opt}" ${item.currentQuantity === opt ? 'selected' : ''}>${opt}</option>`)
-                .join('');
-
-            div.innerHTML = `
-                <div class="list-item" onclick="toggleSelection(${item.id})">
-                    <div class="icon-container">${checkIcon}</div>
-                    <div class="item-details">
-                        <div class="item-name">${item.name}</div>
-                        ${recentFlag}
-                    </div>
+        function renderMeals() {
+            document.getElementById('meal-list').innerHTML = DB.meals.map(meal => `
+                <div class="meal-card">
+                    <div class="meal-info"><h2>${meal.name}</h2><p>${meal.day} • ${meal.tags}</p></div>
+                    <button class="smart-cart-btn" onclick="breakdownRecipe('${meal.name}')">🛒</button>
                 </div>
-                <div class="quantity-selector">
-                    <select onchange="updateQuantity(${item.id}, this.value)">
-                        ${optionsHTML}
-                    </select>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function toggleSelection(id) {
-        const item = databaseItems.find(i => i.id === id);
-        if (item) {
-            item.selected = !item.selected;
-            renderGroceryList();
-            updateRecommendations();
+            `).join('');
         }
-    }
 
-    function updateQuantity(id, value) {
-        const item = databaseItems.find(i => i.id === id);
-        if (item) {
-            item.currentQuantity = value;
-        }
-    }
-
-    function updateRecommendations() {
-        currentRecommendations = [];
-        const selectedItems = databaseItems.filter(i => i.selected).map(i => i.name.trim().toLowerCase());
-
-        if (selectedItems.length > 0) {
-            aiIntelligenceRules.forEach(rule => {
-                const isTriggered = rule.triggers.some(trigger => 
-                    selectedItems.some(selected => selected.includes(trigger.toLowerCase()))
-                );
-
-                if (isTriggered) {
-                    const suggName = rule.suggestion.name.trim().toLowerCase();
-                    const existsInDb = databaseItems.some(dbItem => dbItem.name.trim().toLowerCase() === suggName);
-                    const alreadySuggested = currentRecommendations.some(rec => rec.name.trim().toLowerCase() === suggName);
-
-                    if (!existsInDb && !alreadySuggested) {
-                        currentRecommendations.push({
-                            id: Date.now() + Math.random(),
-                            name: rule.suggestion.name,
-                            contextReason: rule.suggestion.contextReason
-                        });
-                    }
+        function breakdownRecipe(mealName) {
+            triggerHaptic();
+            const ingredients = DB.recipes[mealName] || [];
+            
+            ingredients.forEach(ing => {
+                const recentOrder = DB.orderHistory.find(h => h.item === ing.name);
+                const exists = DB.cart.find(c => c.name === ing.name);
+                if(!exists) {
+                    DB.cart.push({ 
+                        name: ing.name, 
+                        quantity: ing.defaultQty, 
+                        checked: !recentOrder, 
+                        recent: !!recentOrder, 
+                        flag: recentOrder ? "Ordered in last 7 days" : "" 
+                    });
                 }
             });
+            renderCart();
+            switchTab('cart');
         }
 
-        renderAIList();
-    }
-
-    function renderAIList() {
-        const container = document.getElementById('ai-recommendations-list');
-        container.innerHTML = '';
-
-        if (currentRecommendations.length === 0) {
-            container.innerHTML = '<div class="item-meta" style="padding: 16px 0;">Select items from the grocery list to see AI suggestions here.</div>';
-            return;
+        function toggleItem(index) {
+            triggerHaptic();
+            DB.cart[index].checked = !DB.cart[index].checked;
+            renderCart();
         }
 
-        currentRecommendations.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'list-item-container';
+        /* DYNAMIC BOTTOM SHEET PICKER LOGIC */
+        function openPicker(event, index) {
+            event.stopPropagation(); // Prevents checking/unchecking the box
+            triggerHaptic();
+            currentEditIndex = index;
+            const item = DB.cart[index];
+            const options = UNIT_TYPES[item.name] || UNIT_TYPES["default"];
             
-            div.innerHTML = `
-                <div class="list-item">
-                    <div class="icon-container" style="color: #1976D2;">✨</div>
-                    <div class="item-details">
-                        <div class="item-name">${item.name}</div>
-                        <div class="item-meta ai-reason">${item.contextReason}</div>
+            document.getElementById('picker-title').innerText = item.name;
+            document.getElementById('picker-grid').innerHTML = options.map(opt => 
+                `<button class="unit-btn" onclick="selectQuantity('${opt}')">${opt}</button>`
+            ).join('');
+            
+            document.getElementById('picker-overlay').classList.add('active');
+            document.getElementById('bottom-sheet').classList.add('active');
+        }
+
+        function selectQuantity(qty) {
+            triggerHaptic();
+            DB.cart[currentEditIndex].quantity = qty;
+            closePicker();
+            renderCart();
+        }
+
+        function closePicker() {
+            document.getElementById('picker-overlay').classList.remove('active');
+            document.getElementById('bottom-sheet').classList.remove('active');
+        }
+
+        function renderCart() {
+            let activeHtml = '', dimmedHtml = '';
+
+            DB.cart.forEach((item, index) => {
+                const checkedClass = item.checked ? 'checked' : '';
+                const dimClass = item.recent && !item.checked ? 'dimmed' : '';
+                const checkMark = item.checked ? '✓' : '';
+                const flagHtml = item.flag ? `<div class="item-flag">🕒 ${item.flag}</div>` : '';
+
+                const html = `
+                    <div class="grocery-item ${checkedClass} ${dimClass}" onclick="toggleItem(${index})">
+                        <div class="checkbox">${checkMark}</div>
+                        <div class="item-details">
+                            <div class="item-text-group">
+                                <div class="item-name">${item.name}</div>
+                                ${flagHtml}
+                            </div>
+                            <div class="qty-badge" onclick="openPicker(event, ${index})">${item.quantity} ▾</div>
+                        </div>
                     </div>
-                    <button class="bookmark-btn" onclick="handleBookmarkClick(${item.id}, this)">➕</button>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    }
+                `;
 
-    async function handleBookmarkClick(id, buttonElement) {
-        const index = currentRecommendations.findIndex(i => i.id === id);
-        if (index === -1) return;
-
-        buttonElement.style.opacity = '0.5';
-        buttonElement.disabled = true;
-
-        const aiItem = currentRecommendations[index];
-
-        try {
-            await fetch(GOOGLE_SHEET_API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'addItem', name: aiItem.name }),
+                if (item.recent && !item.checked) dimmedHtml += html;
+                else activeHtml += html;
             });
 
-            databaseItems.unshift({
-                id: Date.now(),
-                name: aiItem.name,
-                orderedInLast30Days: false,
-                selected: true,
-                unitType: 'Count',
-                currentQuantity: '1',
-                count: 0
-            });
-
-            updateRecommendations(); 
-            renderGroceryList();
-            
-            const listWrapper = document.getElementById('grocery-list-wrapper');
-            const toggleBtn = document.getElementById('toggle-list-btn');
-            if (listWrapper.style.display === 'none') {
-                listWrapper.style.display = 'block';
-                toggleBtn.innerText = 'Grocery List ▲';
-            }
-
-        } catch (e) {
-            alert("Failed to add to database.");
-            buttonElement.style.opacity = '1';
-            buttonElement.disabled = false;
-        }
-    }
-
-    function openReviewModal() {
-        const selectedItems = databaseItems.filter(i => i.selected);
-        if (selectedItems.length === 0) {
-            alert("Please select at least one item.");
-            return;
+            document.getElementById('active-items').innerHTML = activeHtml || '<p style="color:var(--text-muted)">No active items.</p>';
+            document.getElementById('dimmed-items').innerHTML = dimmedHtml || '<p style="color:var(--text-muted)">No recently bought items.</p>';
         }
 
-        const container = document.getElementById('review-list-container');
-        container.innerHTML = selectedItems.map(i => `✅ <strong>${i.name}</strong> - ${i.currentQuantity}`).join('<br>');
-        
-        document.getElementById('review-modal').style.display = 'flex';
-    }
-
-    function closeReviewModal() {
-        document.getElementById('review-modal').style.display = 'none';
-    }
-
-    async function confirmAndSend() {
-        const selectedItems = databaseItems.filter(i => i.selected);
-        const btn = document.getElementById('confirm-submit-btn');
-        btn.innerText = "Processing...";
-        btn.disabled = true;
-
-        const payload = selectedItems.map(i => ({ name: i.name, quantity: i.currentQuantity }));
-
-        try {
-            await fetch(GOOGLE_SHEET_API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'submit', items: payload }),
-            });
+        function sendToSwiggy() {
+            triggerHaptic();
+            const itemsToBuy = DB.cart.filter(item => item.checked).map(item => `${item.quantity} ${item.name}`);
+            if(itemsToBuy.length === 0) return alert("Select at least one item.");
             
-            const formattedItems = selectedItems.map(i => `✅ ${i.name} - ${i.currentQuantity}`).join('%0A');
-            const textMessage = `Hi! Here is the monthly grocery list:%0A%0A${formattedItems}`;
-            
-            window.open(`whatsapp://send?text=${textMessage}`, '_blank');
-            closeReviewModal();
-        } catch (error) {
-            alert("Failed to sync with database. Please try again.");
-        } finally {
-            btn.innerText = "Confirm & Send";
-            btn.disabled = false;
+            const searchQuery = encodeURIComponent(itemsToBuy.join(" "));
+            window.location.href = `swiggy://instamart/search?query=${searchQuery}`;
         }
-    }
-</script>
 
+        initApp();
+    </script>
 </body>
 </html>
