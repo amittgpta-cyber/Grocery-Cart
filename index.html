@@ -42,7 +42,6 @@
         .container { padding: 24px 20px; max-width: 600px; margin: 0 auto; }
         .section-title { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: 24px 0 12px 0; font-weight: bold;}
 
-        /* LIQUID GLASS NAV */
         .bottom-nav {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
             width: 92%; max-width: 450px;
@@ -66,7 +65,6 @@
             to { opacity: 1; transform: translateX(0) scale(1); }
         }
 
-        /* MEALSYNC DISCOVER & PLANNER */
         .search-bar {
             width: 100%; padding: 16px 20px; border-radius: 16px; border: 1px solid var(--border-color);
             background: var(--surface-color); color: var(--text-main); font-size: 16px;
@@ -103,7 +101,6 @@
         }
         .smart-cart-btn:active { transform: scale(0.85); background: var(--primary-accent); color: white; }
 
-        /* GROCERY CART */
         .grocery-item {
             background: var(--surface-color); border-radius: 16px; padding: 16px; margin-bottom: 12px;
             display: flex; align-items: center; border: 1px solid var(--border-color);
@@ -132,7 +129,6 @@
             margin-top: 24px; cursor: pointer; box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
         }
 
-        /* OVERLAYS & BOTTOM SHEETS */
         .overlay-bg {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
@@ -154,7 +150,6 @@
             padding: 18px 0; border-radius: 16px; font-size: 16px; font-weight: 600; cursor: pointer;
         }
 
-        /* GUIDED SHOPPING */
         .guided-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: var(--bg-color); z-index: 3000;
@@ -166,8 +161,8 @@
         .shopping-progress { color: var(--text-muted); font-size: 16px; margin-bottom: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
         .shopping-item-name { font-size: 36px; font-weight: bold; margin-bottom: 48px; color: var(--text-main); }
         
-        .action-btn { background: var(--primary-accent); color: white; border: none; width: 100%; max-width: 350px; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: bold; margin-bottom: 16px; cursor: pointer; }
-        .secondary-btn { background: transparent; color: var(--text-main); border: 2px solid var(--border-color); width: 100%; max-width: 350px; padding: 20px; border-radius: 16px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .action-btn { background: var(--primary-accent); color: white; border: none; width: 100%; max-width: 350px; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: bold; margin-bottom: 16px; cursor: pointer; box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3); }
+        .action-btn:active { transform: scale(0.95); }
         .close-shopping { position: absolute; top: 40px; right: 24px; background: none; border: none; font-size: 32px; color: var(--text-muted); cursor: pointer; }
         
         #sync-status {
@@ -187,8 +182,8 @@
         <button class="close-shopping" onclick="closeGuidedShopping()">×</button>
         <div class="shopping-progress" id="shopping-progress">Item 1 of X</div>
         <div class="shopping-item-name" id="shopping-item-name">Item</div>
-        <button class="action-btn" onclick="searchCurrentItem()">1. Open in Swiggy</button>
-        <button class="secondary-btn" onclick="nextShoppingItem()">2. Mark Done & Next</button>
+        
+        <button class="action-btn" onclick="markDoneAndNext()">Mark Done & Auto-Search Next</button>
     </div>
 
     <div class="container">
@@ -232,7 +227,6 @@
     </div>
 
     <script>
-        // REPLACE THIS WITH YOUR DEPLOYED GOOGLE APPS SCRIPT URL
         const GOOGLE_WEB_APP_URL = "YOUR_GOOGLE_SCRIPT_URL_HERE";
 
         const UNIT_TYPES = {
@@ -245,7 +239,6 @@
             "default": ["1", "2", "3", "4", "5"]
         };
 
-        // Application State
         let DB = {
             recipesMaster: [],
             plannedMeals: {},
@@ -268,7 +261,6 @@
                     const data = await response.json();
                     DB = data; 
                 } else {
-                    // Fallback local state for initial testing before script deployment
                     DB = {
                         recipesMaster: [
                             { id: "r1", name: "Aloo Shimla Mirch", tags: "Dry Veg", isChefSpecial: true, ingredients: [{name: "Potatoes", defaultQty: "1 kg"}, {name: "Capsicum", defaultQty: "500 g"}, {name: "Curd", defaultQty: "500 g"}] },
@@ -428,6 +420,13 @@
             shoppingIndex = 0;
             updateGuidedUI();
             document.getElementById('guided-overlay').classList.add('active');
+
+            // Automatically open Swiggy for the FIRST item instantly
+            const firstItem = shoppingQueue[0];
+            const searchQuery = encodeURIComponent(firstItem.name);
+            setTimeout(() => {
+                window.location.href = `swiggy://instamart/search?query=${searchQuery}`;
+            }, 300);
         }
 
         function updateGuidedUI() {
@@ -436,17 +435,12 @@
             document.getElementById('shopping-item-name').innerText = `${item.quantity} ${item.name}`;
         }
 
-        function searchCurrentItem() {
+        function markDoneAndNext() {
             triggerHaptic();
-            const item = shoppingQueue[shoppingIndex];
-            const searchQuery = encodeURIComponent(`${item.name}`);
-            window.location.href = `swiggy://instamart/search?query=${searchQuery}`;
-        }
-
-        function nextShoppingItem() {
-            triggerHaptic();
-            const item = shoppingQueue[shoppingIndex];
-            const dbIndex = DB.cart.findIndex(c => c.name === item.name);
+            
+            // Mark current item done
+            const currentItem = shoppingQueue[shoppingIndex];
+            const dbIndex = DB.cart.findIndex(c => c.name === currentItem.name);
             
             if(dbIndex !== -1) {
                 DB.cart[dbIndex].checked = false;
@@ -454,12 +448,20 @@
                 DB.cart[dbIndex].flag = "Just Bought";
             }
 
+            // Move to next item
             shoppingIndex++;
+            
             if(shoppingIndex >= shoppingQueue.length) {
                 closeGuidedShopping();
                 syncCartToBackend();
             } else {
                 updateGuidedUI();
+                // Automatically open Swiggy for the NEXT item instantly
+                const nextItem = shoppingQueue[shoppingIndex];
+                const searchQuery = encodeURIComponent(nextItem.name);
+                setTimeout(() => {
+                    window.location.href = `swiggy://instamart/search?query=${searchQuery}`;
+                }, 300);
             }
         }
 
