@@ -71,6 +71,9 @@
     .stat strong { font-size: 1.5rem; margin: 0; font-weight: 700; font-family: var(--font-display); }
     .stat .subtle { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin: 0; }
     
+    .action-row { display: flex; gap: 10px; margin-top: 16px; padding: 0 0.5rem; flex-wrap: wrap; }
+    .action-row button { flex: 1; min-width: 100px; font-size: 0.9rem; }
+
     @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(50px) scale(0.96); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
     
     .cards { display: grid; gap: 1.5rem; }
@@ -103,11 +106,6 @@
     
     .empty { padding: 3rem 2rem; text-align: left; background: var(--color-surface); border-radius: var(--radius-2xl); border: 1px solid var(--color-border); color: var(--color-text-muted); font-size: 1.125rem; }
     .empty h3 { color: var(--color-text); margin-bottom: 0.5rem; font-family: var(--font-display); font-size: 2rem; line-height: 1.1; letter-spacing: -0.02em; }
-    
-    .bottom-console { position: fixed; left: 50%; bottom: max(1.5rem, env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(0); width: calc(100% - 1.5rem); max-width: 600px; padding: 0.5rem; background: color-mix(in oklab, var(--color-surface) 75%, transparent); backdrop-filter: blur(48px) saturate(150%); -webkit-backdrop-filter: blur(48px) saturate(150%); border: 1px solid var(--color-border); border-radius: 3rem; z-index: 20; box-shadow: var(--shadow-md); display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; transition: transform 0.4s var(--ease-spring), opacity 0.3s var(--ease-android); }
-    .bottom-console.hidden { transform: translateX(-50%) translateY(150%); opacity: 0; pointer-events: none; }
-    .console-left { display: flex; }
-    .console-right { display: flex; gap: 0.5rem; flex-grow: 1; justify-content: flex-end; }
     
     .modal { position: fixed; inset: 0; background: color-mix(in oklab, #000 85%, transparent); display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 50; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); opacity: 0; transition: opacity 0.3s var(--ease-android); }
     .modal.open { display: flex; opacity: 1; }
@@ -190,7 +188,6 @@
 
   <div class="shell">
     <main id="main">
-      
       <div id="page-plan" class="page active">
         <section class="hero">
           <div class="hero-grid"><h2 id="hero-title">Plan Your Day</h2></div>
@@ -198,6 +195,11 @@
             <article class="stat" data-open-cookbook="breakfast"><span class="subtle">Breakfast</span><strong id="countBreakfast">0</strong></article>
             <article class="stat" data-open-cookbook="lunch"><span class="subtle">Lunch</span><strong id="countLunch">0</strong></article>
             <article class="stat" data-open-cookbook="dinner"><span class="subtle">Dinner</span><strong id="countDinner">0</strong></article>
+          </div>
+          <div class="action-row">
+            <button id="generateBtn" class="primary-btn">🎲 Auto-Plan</button>
+            <button id="surpriseBtn" class="accent-btn">✨ Chef Special</button>
+            <button id="fridgeBtn" class="ghost-btn">❄️ Fridge Match</button>
           </div>
         </section>
         <section class="section"><div id="suggestions" class="cards" aria-live="polite"><div class="empty"><h3>Loading database...</h3></div></div></section>
@@ -227,18 +229,6 @@
       </div>
 
     </main>
-  </div>
-
-  <div class="bottom-console" id="bottomConsole">
-    <div class="console-left">
-      <button id="fridgeBtn" class="icon-btn" style="border-radius: 50%; width: 56px; height: 56px; background: var(--color-surface-offset); border-color: var(--color-border);" type="button" title="Fridge Match">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      </button>
-    </div>
-    <div class="console-right">
-      <button id="surpriseBtn" class="accent-btn" style="border-radius: 3rem; min-height: 56px;" type="button">Chef Special</button>
-      <button id="generateBtn" class="primary-btn" type="button" style="border-radius: 3rem; min-height: 56px; padding: 0.75rem 1.5rem;"><span style="font-size:1.4rem; line-height:1; margin-right:4px;">🎲</span> Plan</button>
-    </div>
   </div>
 
   <div class="bottom-nav">
@@ -357,12 +347,16 @@
       tableSections: document.getElementById('tableSections'),
       reviewQueuePanel: document.getElementById('reviewQueuePanel'),
       reviewQueueList: document.getElementById('reviewQueueList'),
-      cookBookScrollArea: document.getElementById('cookBookScrollArea'),
-      bottomConsole: document.getElementById('bottomConsole')
+      cookBookScrollArea: document.getElementById('cookBookScrollArea')
     };
 
     let pendingApprovals = [];
     let cachedGlobalVegMeals = null;
+
+    // RESTORED FIX: The escapeHtml function prevents UI crashes when generating lists.
+    function escapeHtml(str) { 
+      return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); 
+    }
 
     function getMealTag(name) {
       const low = String(name || '').toLowerCase();
@@ -391,17 +385,8 @@
       document.querySelectorAll('.page, .nav-item').forEach(el => el.classList.remove('active'));
       document.getElementById(`page-${tabId}`).classList.add('active');
       btn.classList.add('active');
-      els.bottomConsole.style.display = tabId === 'plan' ? 'flex' : 'none';
       if(tabId === 'cart') renderCart();
     }
-
-    let lastScrollY = window.scrollY;
-    window.addEventListener('scroll', () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 50) els.bottomConsole.classList.add('hidden');
-      else if (currentScrollY < lastScrollY) els.bottomConsole.classList.remove('hidden');
-      lastScrollY = currentScrollY;
-    }, { passive: true });
 
     function renderReviewQueue() {
       els.reviewQueueList.innerHTML = '';
@@ -454,8 +439,8 @@
     function getCandidatePool(categoryArr) { return categoryArr.length ? categoryArr : ['No meals added']; }
     function pickUniqueMeal(categoryArr, excludedNames = []) {
       const pool = getCandidatePool(categoryArr);
-      const excluded = new Set(excludedNames.map(v => v.toLowerCase()));
-      const uniquePool = pool.filter(m => !excluded.has(m.toLowerCase()));
+      const excluded = new Set(excludedNames.map(v => String(v).toLowerCase()));
+      const uniquePool = pool.filter(m => !excluded.has(String(m).toLowerCase()));
       const source = uniquePool.length ? uniquePool : pool;
       return source[Math.floor(Math.random() * source.length)];
     }
@@ -549,6 +534,39 @@
       renderOutputDeck(state.currentSuggestions);
     }
 
+    // RESTORED FIX: The matching pipeline functions exactly as originally intended.
+    async function runFridgeMatchingPipeline() {
+      const raw = document.getElementById('fridgeIngredientsInput').value.trim();
+      if (!raw) return;
+      const items = raw.toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
+      const findMatches = pool => pool.filter(meal => items.some(ingredient => meal.toLowerCase().includes(ingredient)));
+      
+      const bMatches = findMatches(state.db.breakfast);
+      const lMatches = findMatches(state.db.lunch);
+      const dMatches = findMatches(state.db.dinner);
+      
+      closeModal(els.fridgeModal);
+
+      const searchQ = encodeURIComponent(`${items.join(' ')} recipes`);
+      window.open(`https://www.google.com/search?q=${searchQ}`, '_blank', 'noopener,noreferrer');
+      window.open(`https://www.youtube.com/results?search_query=${searchQ}`, '_blank', 'noopener,noreferrer');
+
+      const deck = [];
+      if (bMatches.length > 0) deck.push(buildCard('Breakfast', bMatches[Math.floor(Math.random() * bMatches.length)], 'db'));
+      if (lMatches.length > 0) deck.push(buildCard('Lunch', lMatches[Math.floor(Math.random() * lMatches.length)], 'db'));
+      if (dMatches.length > 0) deck.push(buildCard('Dinner', dMatches[Math.floor(Math.random() * dMatches.length)], 'db'));
+
+      if (deck.length > 0) {
+         renderOutputDeck(deck);
+      } else {
+         els.suggestions.innerHTML = `
+          <div class="empty" style="border-color: var(--color-success);">
+            <h3 style="color: var(--color-success);">Internet Search Triggered!</h3>
+            <p class="subtle">We couldn't find any matches in your CookBook for <b>${items.join(', ')}</b>.</p>
+          </div>`;
+      }
+    }
+
     function normalizeSuggestionToMealName(name) { return String(name).replace(/^Try:\s*/i, '').replace(/^Internet search:\s*/i, '').trim(); }
 
     function renderSpreadsheetModal() {
@@ -602,9 +620,9 @@
 
       const renderList = (arr, isRecent) => arr.map(item => {
         const inCart = state.cart.some(c => c.name === item.name);
-        return `<div class="grocery-item ${inCart ? 'checked' : ''} ${isRecent && !inCart ? 'dimmed' : ''}" onclick="toggleMasterItem('${item.name}', ${isRecent})">
+        return `<div class="grocery-item ${inCart ? 'checked' : ''} ${isRecent && !inCart ? 'dimmed' : ''}" onclick="toggleMasterItem('${escapeHtml(item.name)}', ${isRecent})">
           <div class="checkbox">${inCart ? '✓' : ''}</div>
-          <div class="item-name">${item.name}</div>
+          <div class="item-name">${escapeHtml(item.name)}</div>
         </div>`;
       }).join('');
 
@@ -633,7 +651,7 @@
           <div class="grocery-item ${item.checked ? 'checked' : ''} ${item.recent && !item.checked ? 'dimmed' : ''}" onclick="toggleCartItem(${index})">
               <div class="checkbox">${item.checked ? '✓' : ''}</div>
               <div class="item-details">
-                  <div class="item-text-group"><div class="item-name">${item.name}</div>${item.flag ? `<div class="item-flag">🕒 ${item.flag}</div>` : ''}</div>
+                  <div class="item-text-group"><div class="item-name">${escapeHtml(item.name)}</div>${item.flag ? `<div class="item-flag">🕒 ${item.flag}</div>` : ''}</div>
                   <div class="qty-badge" onclick="openPicker(event, ${index})">${item.quantity} ▾</div>
               </div>
           </div>`;
@@ -650,7 +668,7 @@
       const finalRecos = [...recos].filter(r => !state.cart.some(c => c.name === r));
       
       if(finalRecos.length > 0) {
-        aiContent.innerHTML = finalRecos.map(r => `<div class="ai-pill" onclick="toggleMasterItem('${r}', false)">+ ${r}</div>`).join('');
+        aiContent.innerHTML = finalRecos.map(r => `<div class="ai-pill" onclick="toggleMasterItem('${escapeHtml(r)}', false)">+ ${escapeHtml(r)}</div>`).join('');
         aiStrip.style.display = 'block';
       } else { aiStrip.style.display = 'none'; }
     }
@@ -714,12 +732,17 @@
     // --- EVENT LISTENERS ---
     document.getElementById('generateBtn').addEventListener('click', generateDefaultSuggestions);
     document.getElementById('submitApprovalBtn').addEventListener('click', submitQueueForApproval);
+    
     document.getElementById('surpriseBtn').addEventListener('click', async function() {
       els.suggestions.innerHTML = '<div class="empty"><h3>Fetching inspirations...</h3></div>';
       const [b, l, d] = await Promise.all([ fetchSurpriseMealFromInternet(), fetchSurpriseMealFromInternet(), fetchSurpriseMealFromInternet() ]);
       renderOutputDeck([ buildCard("Breakfast", b, 'internet'), buildCard("Lunch", l, 'internet'), buildCard("Dinner", d, 'internet') ]);
     });
+    
     document.getElementById('fridgeBtn').addEventListener('click', () => openModal(els.fridgeModal));
+    // RESTORED FIX: Fridge Matching Listener
+    document.getElementById('submitFridgeIngredientsBtn').addEventListener('click', runFridgeMatchingPipeline);
+
     document.getElementById('openDataBtn').addEventListener('click', () => { openModal(els.dataModal); renderSpreadsheetModal(); });
     document.getElementById('closeDataBtn').addEventListener('click', () => closeModal(els.dataModal));
     document.getElementById('closeFridgeBtn').addEventListener('click', () => closeModal(els.fridgeModal));
