@@ -3,14 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
-  <title>Meal Sync Pro</title>
+  <title>SpiceSync</title>
   <meta name="theme-color" content="#000000" />
-  <link rel="manifest" href="/Meal-generator/manifest.json">
+  <link rel="manifest" href="manifest.json">
   <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=boska@400,500,700&display=swap" rel="stylesheet">
-  <script defer src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root, [data-theme="light"] {
       --color-bg: #ffffff; --color-surface: #f7f6f2; --color-surface-2: #f2f1ed; --color-surface-offset: #ebeae6;
@@ -70,9 +66,6 @@
     .stat strong { font-size: 1.5rem; margin: 0; font-weight: 700; font-family: var(--font-display); }
     .stat .subtle { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin: 0; }
     
-    .action-row { display: flex; gap: 10px; margin-top: 16px; padding: 0 0.5rem; flex-wrap: wrap; }
-    .action-row button { flex: 1; min-width: 100px; font-size: 0.9rem; }
-
     @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(50px) scale(0.96); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
     
     .cards { display: grid; gap: 1.5rem; }
@@ -100,8 +93,8 @@
     
     .explore-area { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 0.75rem; padding: 0 1.5rem; max-height: 0; opacity: 0; margin-top: -0.5rem; transition: all 0.4s var(--ease-spring); border-top: 1px solid transparent; }
     .explore-area::-webkit-scrollbar { display: none; }
-    .explore-area.open { max-height: 120px; opacity: 1; border-top-color: var(--color-divider); padding-top: 1.5rem; padding-bottom: 1.5rem; margin-top: 0; }
-    .explore-area .card-action { flex-shrink: 0; min-height: 48px; border-radius: 2rem; font-size: 0.9rem; padding: 0.5rem 1.25rem; white-space: nowrap; }
+    .explore-area.open { max-height: 120px; opacity: 1; border-top-color: var(--color-divider); padding-top: 1.5rem; padding-bottom: 1.5rem; margin-top: 0; justify-content: space-around; }
+    .explore-area .card-action { flex-shrink: 0; width: 52px; height: 52px; border-radius: 50%; padding: 0; display: flex; justify-content: center; align-items: center; background: var(--color-surface); border: 1px solid var(--color-border); }
     
     .empty { padding: 3rem 2rem; text-align: left; background: var(--color-surface); border-radius: var(--radius-2xl); border: 1px solid var(--color-border); color: var(--color-text-muted); font-size: 1.125rem; }
     .empty h3 { color: var(--color-text); margin-bottom: 0.5rem; font-family: var(--font-display); font-size: 2rem; line-height: 1.1; letter-spacing: -0.02em; }
@@ -115,9 +108,6 @@
     .dialog-content-scroll { overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; padding-bottom: 2rem; scroll-behavior: smooth; }
     .dialog-content-scroll::-webkit-scrollbar { display: none; }
     .dialog-tools { padding: 1.5rem 2rem; display: grid; gap: 1.25rem; border-bottom: 1px solid var(--color-divider); }
-    .import-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-    .import-label { display: grid; place-items: center; gap: 0.5rem; padding: 1.25rem; text-align: center; background: var(--color-surface-2); border: 1px dashed var(--color-border); border-radius: 1.5rem; cursor: pointer; font-size: 0.875rem; transition: background 0.2s; font-weight: 600; }
-    .hidden { display: none !important; }
     .dialog-body { padding: 2rem; display: grid; gap: 2rem; }
     .panel { padding: 1.5rem; background: var(--color-surface-2); border-radius: 2rem; border: 1px solid var(--color-border); }
     .panel h5 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: .12em; color: var(--color-primary); margin-bottom: 1.25rem; font-weight: 700; }
@@ -132,11 +122,6 @@
     .page { display: none; animation: fadePeek 0.4s var(--ease-spring); }
     .page.active { display: block; }
     @keyframes fadePeek { from { opacity: 0; transform: translateX(20px) scale(0.98); } to { opacity: 1; transform: translateX(0) scale(1); } }
-    
-    .bottom-nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 450px; background: color-mix(in oklab, var(--color-surface) 85%, transparent); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid var(--color-border); border-radius: 40px; display: flex; justify-content: space-around; padding: 12px 8px; box-shadow: var(--shadow-md); z-index: 1000; transition: transform 0.4s var(--ease-spring); }
-    .bottom-nav.hidden { transform: translateX(-50%) translateY(150%); }
-    .nav-item { background: none; border: none; color: var(--color-text-muted); font-size: 15px; font-weight: 600; padding: 12px 20px; border-radius: 30px; cursor: pointer; transition: all 0.3s var(--ease-spring); display: flex; align-items: center; gap: 6px; }
-    .nav-item.active { background: var(--color-primary); color: var(--color-bg); }
 
     /* SWIPE TO DELETE STYLES */
     .swipe-wrapper { position: relative; overflow: hidden; margin-bottom: 12px; border-radius: 1.5rem; }
@@ -176,13 +161,29 @@
     
     .loading-spinner { border: 4px solid var(--color-surface-offset); border-top: 4px solid var(--color-primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 24px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Split Pill Floating Nav */
+    .split-nav { position: fixed; bottom: 20px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 20px; pointer-events: none; transition: transform 0.4s cubic-bezier(0.3, 0, 0.2, 1), opacity 0.4s; z-index: 1000; }
+    .split-nav.hidden { transform: translateY(100px); opacity: 0; }
+    .nav-pill { background: color-mix(in oklab, var(--color-surface) 90%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 30px; display: flex; align-items: center; padding: 8px 12px; pointer-events: auto; box-shadow: var(--shadow-md); border: 1px solid var(--color-border); }
+    .nav-left { padding: 8px 16px; }
+    .nav-right { gap: 15px; }
+    .nav-btn { background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 10px; border-radius: 50%; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+    .nav-btn.active, .nav-btn:hover { color: var(--color-primary); background: color-mix(in oklab, var(--color-primary) 15%, transparent); }
+    .nav-btn svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-btn.globe-btn svg { width: 30px; height: 30px; }
+
+    .nutrition-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; text-align: center; margin-top: 10px; }
+    .nutrient { display: flex; flex-direction: column; background: var(--color-surface-2); padding: 20px; border-radius: 1.5rem; border: 1px solid var(--color-border); }
+    .nutrient-val { font-size: 24px; font-weight: bold; color: var(--color-primary); font-family: var(--font-display); }
+    .nutrient-label { font-size: 14px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-top: 4px; }
   </style>
 </head>
 <body>
   <div class="topbar-wrapper">
     <div class="brand">
       <div class="brand-logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 6c3-2 11-2 14 0"/><path d="M7 10c2-1 8-1 10 0"/><path d="M12 4v16"/><path d="M9 18c0 1.7 1.3 2 3 2s3-.3 3-2"/></svg></div>
-      <div><h1>Meal Sync</h1></div>
+      <div><h1>SpiceSync</h1></div>
     </div>
     <div class="header-actions">
       <button class="icon-btn" style="border-radius: 50%;" type="button" data-theme-toggle aria-label="Toggle theme">
@@ -206,8 +207,6 @@
           </div>
           <div class="action-row">
             <button id="generateBtn" class="primary-btn">🎲 Auto-Plan</button>
-            <button id="surpriseBtn" class="accent-btn">✨ Chef Special</button>
-            <button id="fridgeBtn" class="ghost-btn">❄️ Fridge Match</button>
           </div>
         </section>
         <section class="section"><div id="suggestions" class="cards" aria-live="polite"><div class="empty"><h3>Loading database...</h3></div></div></section>
@@ -234,9 +233,26 @@
     </main>
   </div>
 
-  <div class="bottom-nav" id="bottomNav">
-    <button class="nav-item active" onclick="switchTab('plan', this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Plan</button>
-    <button class="nav-item" onclick="switchTab('cart', this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> Cart</button>
+  <div class="split-nav" id="bottomNav">
+    <div class="nav-pill nav-left">
+      <button class="nav-btn" id="nav-cart" onclick="switchTab('cart')">
+        <svg viewBox="0 0 24 24"><path d="M9 20a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm7 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-9.8-2h11.2a2 2 0 0 0 1.9-1.4l2.4-7.6A1 1 0 0 0 21 8H6.5l-.8-3.4A2 2 0 0 0 3.8 3H2v2h1.8l3.6 14.5A2 2 0 0 0 9.2 21h8.6"/></svg>
+      </button>
+    </div>
+    <div class="nav-pill nav-right">
+      <button class="nav-btn" id="nav-fridge" onclick="openModal(els.fridgeModal)">
+        <svg viewBox="0 0 24 24">
+          <path d="M5 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+          <line x1="3" y1="9" x2="17" y2="9"/><circle cx="16" cy="16" r="5" stroke-width="2"/><line x1="19.5" y1="19.5" x2="22" y2="22" stroke-width="2"/>
+        </svg>
+      </button>
+      <button class="nav-btn active" id="nav-meals" onclick="switchTab('plan')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><path d="M12 2v4 M12 18v4 M2 12h4 M18 12h4"/></svg>
+      </button>
+      <button class="nav-btn globe-btn" id="nav-chef" onclick="triggerChefSpecial()">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20 M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </button>
+    </div>
   </div>
 
   <div class="modal" id="masterListModal" aria-hidden="true">
@@ -246,12 +262,10 @@
         <button class="icon-btn" style="border-radius: 50%;" onclick="closeModal(document.getElementById('masterListModal'))">✕</button>
       </div>
       <div class="dialog-content-scroll" style="padding: 1rem;">
-        
         <div style="display:flex; gap:8px; margin-bottom:24px;">
            <input id="newMasterInput" class="input" style="padding: 12px;" placeholder="Add new item...">
            <button class="primary-btn" style="border-radius:1.5rem; padding:0 20px;" onclick="addManualMasterItem()">Add</button>
         </div>
-
         <h5 style="font-size:0.8rem; text-transform:uppercase; letter-spacing:.12em; color:var(--color-primary); margin:1rem 0;">Last Bought</h5>
         <div id="ml-last-bought"></div>
         <h5 style="font-size:0.8rem; text-transform:uppercase; letter-spacing:.12em; color:var(--color-secondary); margin:1rem 0;">Mostly Bought</h5>
@@ -265,20 +279,10 @@
   <div class="modal" id="dataModal" aria-hidden="true">
     <section class="dialog">
       <div class="dialog-head">
-        <h4><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> CookBook</h4>
+        <h4>CookBook</h4>
         <button class="icon-btn" style="border-radius: 50%;" id="closeDataBtn" type="button">✕</button>
       </div>
       <div class="dialog-content-scroll" id="cookBookScrollArea">
-        <div class="dialog-tools">
-          <div class="import-grid">
-            <label class="import-label" for="fileUploadInput">Upload Document</label>
-            <label class="import-label" for="cameraCaptureInput">Camera Scan</label>
-            <input id="fileUploadInput" class="hidden" type="file" accept="image/*,.pdf,.docx,.xlsx,.xls" />
-            <input id="cameraCaptureInput" class="hidden" type="file" accept="image/*" capture="environment" />
-          </div>
-          <div id="uploadStatus" class="status" role="status"></div>
-          <div class="toolbar-row"><button id="exportExcelBtn" class="ghost-btn" type="button" style="width:100%; border-radius: 1.5rem;">Export Back-up (.xlsx)</button></div>
-        </div>
         <div class="dialog-body">
           <section class="panel" id="reviewQueuePanel" style="display:none; border-color:var(--color-success); border-width: 2px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:12px;">
@@ -288,7 +292,6 @@
             <ul class="review-queue-list" id="reviewQueueList"></ul>
           </section>
           <section id="dashboardView" class="stack">
-            <div class="panel"><h5>Add manual entry</h5><div class="stack"><input class="input" id="unified-breakfast" placeholder="Breakfast item" /><input class="input" id="unified-lunch" placeholder="Lunch item" /><input class="input" id="unified-dinner" placeholder="Dinner item" /><button id="saveUnifiedBtn" class="primary-btn" style="border-radius: 1.5rem;" type="button">Queue Entry</button></div></div>
             <div id="tableSections" class="stack"></div>
           </section>
         </div>
@@ -299,16 +302,33 @@
   <div class="modal" id="fridgeModal" aria-hidden="true">
     <section class="dialog small">
       <div class="dialog-head">
-        <div><h4 id="fridgeTitle">Fridge Match</h4><p class="subtle">Searches CookBook. If empty, opens internet search.</p></div>
+        <div><h4 id="fridgeTitle">Fridge Match</h4><p class="subtle">Searches CookBook or internet.</p></div>
         <button class="icon-btn" style="border-radius: 50%;" id="closeFridgeBtn" type="button">✕</button>
       </div>
       <div class="dialog-content-scroll"><div class="dialog-body"><div class="panel"><h5>Ingredients</h5><div class="stack"><input id="fridgeIngredientsInput" class="input" placeholder="Paneer, tomato, capsicum..." /><button id="submitFridgeIngredientsBtn" class="success-btn" style="border-radius: 1.5rem;" type="button">Match ingredients</button></div></div></div></div>
     </section>
   </div>
 
+  <div class="modal" id="nutritionModal" aria-hidden="true">
+    <section class="dialog small">
+      <div class="dialog-head">
+        <h4 id="nutritionModalTitle">Nutritional Info</h4>
+        <button class="icon-btn" style="border-radius: 50%;" onclick="closeModal(document.getElementById('nutritionModal'))" type="button">✕</button>
+      </div>
+      <div class="dialog-content-scroll">
+        <div class="dialog-body" style="padding-top: 0;">
+          <div class="nutrition-grid" id="nutritionGridContent">
+             <p class="subtle">Loading...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
   <div class="modal" id="picker-overlay" onclick="closePicker()" style="background:rgba(0,0,0,0.5);"></div>
   <div class="bottom-sheet" id="bottom-sheet">
     <h2 id="picker-title" style="text-align: center; margin-bottom: 8px; font-family:var(--font-display); text-transform: capitalize;">Select Quantity</h2>
+    <p id="picker-unit-label" class="subtle" style="text-align: center; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;"></p>
     <div class="unit-grid" id="picker-grid"></div>
   </div>
 
@@ -321,12 +341,12 @@
 
   <div class="ai-loading-overlay" id="ai-loading-overlay">
     <div class="loading-spinner"></div>
-    <h2 style="font-family:var(--font-display); font-size: 2rem;">🤖 AI Analyzing Recipe</h2>
-    <p class="subtle" style="margin-top: 12px;">Breaking down core ingredients...</p>
+    <h2 style="font-family:var(--font-display); font-size: 2rem;">🤖 AI Analyzing</h2>
+    <p class="subtle" style="margin-top: 12px;" id="ai-loading-text">Breaking down core ingredients & nutrition...</p>
   </div>
 
   <script>
-    // Scroll auto-hide for bottom nav
+    // --- Auto-Hide Nav Bar Logic ---
     let lastScrollY = window.scrollY;
     const bottomNav = document.getElementById('bottomNav');
     window.addEventListener('scroll', () => {
@@ -339,7 +359,7 @@
       lastScrollY = currentScrollY;
     }, { passive: true });
 
-    const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbwg-cIB832HCKF-sS8NagPis_MD15ImaiW4nys0lr7s-KyJLUhSKDRxPLn5Mn7Sv7tWOA/exec";
+    const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzEI8jaoYwaVrjVfcB9GXNO95rMxqSAC14R5BR6soG11uqCXhpAcMoq0wEy9cH3-vn9MQ/exec";
 
     (() => {
       const themeBtn = document.querySelector('[data-theme-toggle]');
@@ -356,22 +376,13 @@
     })();
 
     const freshSeedData = { breakfast: [], lunch: [], dinner: [] };
-
-    const state = {
-      db: structuredClone(freshSeedData),
-      cookingHistory: [],
-      currentSuggestions: [],
-      masterGrocery: [],
-      orderHistory: [],
-      cart: []
-    };
+    const state = { db: structuredClone(freshSeedData), cookingHistory: [], currentSuggestions: [], masterGrocery: [], orderHistory: [], cart: [] };
 
     const els = {
       suggestions: document.getElementById('suggestions'),
       counts: { breakfast: document.getElementById('countBreakfast'), lunch: document.getElementById('countLunch'), dinner: document.getElementById('countDinner') },
       dataModal: document.getElementById('dataModal'),
       fridgeModal: document.getElementById('fridgeModal'),
-      uploadStatus: document.getElementById('uploadStatus'),
       tableSections: document.getElementById('tableSections'),
       reviewQueuePanel: document.getElementById('reviewQueuePanel'),
       reviewQueueList: document.getElementById('reviewQueueList'),
@@ -381,75 +392,57 @@
     let pendingApprovals = [];
     let cachedGlobalVegMeals = null;
 
-    function escapeHtml(str) { 
-      return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); 
-    }
+    function escapeHtml(str) { return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
-    // Swipe Globals
-    let touchStartX = 0;
-    let currentTranslate = 0;
-    let swipingId = null;
-    let swipingContext = null;
-
-    function handleSwipeStart(e, id, context) {
-      touchStartX = e.touches[0].clientX;
-      swipingId = id;
-      swipingContext = context;
-      const el = document.getElementById(`swipe-item-${id}`);
-      if (el) el.classList.add('swiping');
-    }
-
-    function handleSwipeMove(e, id) {
-      if (swipingId !== id) return;
-      const diff = e.touches[0].clientX - touchStartX;
-      if (diff < 0) { 
-        currentTranslate = diff;
-        const el = document.getElementById(`swipe-item-${id}`);
-        if (el) el.style.transform = `translateX(${currentTranslate}px)`;
+    function switchTab(tabId) {
+      if(navigator.vibrate) navigator.vibrate(15);
+      document.querySelectorAll('.page, .nav-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(`page-${tabId}`).classList.add('active');
+      
+      if(tabId === 'cart') {
+        document.getElementById('nav-cart').classList.add('active');
+        document.getElementById('openDataBtn').style.display = 'none';
+        renderCart();
+      } else {
+        document.getElementById('nav-meals').classList.add('active');
+        document.getElementById('openDataBtn').style.display = 'flex';
       }
     }
 
+    async function triggerChefSpecial() {
+      if(navigator.vibrate) navigator.vibrate(15);
+      document.getElementById('nav-chef').classList.add('active');
+      setTimeout(() => document.getElementById('nav-chef').classList.remove('active'), 1000);
+      switchTab('plan');
+      
+      els.suggestions.innerHTML = '<div class="empty"><h3>Fetching inspirations...</h3></div>';
+      const [b, l, d] = await Promise.all([ fetchSurpriseMealFromInternet(), fetchSurpriseMealFromInternet(), fetchSurpriseMealFromInternet() ]);
+      renderOutputDeck([ buildCard("Breakfast", b, 'internet'), buildCard("Lunch", l, 'internet'), buildCard("Dinner", d, 'internet') ]);
+    }
+
+    // Swipe Globals
+    let touchStartX = 0; let currentTranslate = 0; let swipingId = null; let swipingContext = null;
+
+    function handleSwipeStart(e, id, context) { touchStartX = e.touches[0].clientX; swipingId = id; swipingContext = context; document.getElementById(`swipe-item-${id}`)?.classList.add('swiping'); }
+    function handleSwipeMove(e, id) { if (swipingId !== id) return; const diff = e.touches[0].clientX - touchStartX; if (diff < 0) { currentTranslate = diff; document.getElementById(`swipe-item-${id}`).style.transform = `translateX(${currentTranslate}px)`; } }
     function handleSwipeEnd(e, id, originalKey) {
       if (swipingId !== id) return;
       const el = document.getElementById(`swipe-item-${id}`);
       swipingId = null;
       if (el) {
         el.classList.remove('swiping');
-        if (currentTranslate < -80) {
-          el.style.transform = `translateX(-100%)`;
-          setTimeout(() => {
-            if (swipingContext === 'cart') deleteCartItem(originalKey);
-            if (swipingContext === 'master') deleteMasterItem(originalKey);
-          }, 200);
-        } else {
-          el.style.transform = `translateX(0)`;
-        }
+        if (currentTranslate < -80) { el.style.transform = `translateX(-100%)`; setTimeout(() => { if (swipingContext === 'cart') deleteCartItem(originalKey); if (swipingContext === 'master') deleteMasterItem(originalKey); }, 200); } 
+        else { el.style.transform = `translateX(0)`; }
       }
       currentTranslate = 0;
     }
 
-    function deleteCartItem(index) {
-      if(navigator.vibrate) navigator.vibrate(15);
-      state.cart.splice(index, 1);
-      renderCart();
-      syncCartToBackend();
-    }
-
-    function deleteMasterItem(name) {
-      if(navigator.vibrate) navigator.vibrate(15);
-      state.masterGrocery = state.masterGrocery.filter(i => i.name !== name);
-      openMasterList();
-      fetch(GOOGLE_SHEETS_API_URL, { method:'POST', body: JSON.stringify({action:'deleteMasterItem', item: name}) });
-    }
+    function deleteCartItem(index) { if(navigator.vibrate) navigator.vibrate(15); state.cart.splice(index, 1); renderCart(); syncCartToBackend(); }
+    function deleteMasterItem(name) { if(navigator.vibrate) navigator.vibrate(15); state.masterGrocery = state.masterGrocery.filter(i => i.name !== name); openMasterList(); fetch(GOOGLE_SHEETS_API_URL, { method:'POST', body: JSON.stringify({action:'deleteMasterItem', item: name}) }); }
 
     function addManualMasterItem() {
       const val = document.getElementById('newMasterInput').value.trim();
-      if(val) {
-          state.masterGrocery.push({name: val, freq: 1});
-          document.getElementById('newMasterInput').value = '';
-          openMasterList();
-          fetch(GOOGLE_SHEETS_API_URL, { method:'POST', body: JSON.stringify({action:'addMasterItem', item: val}) });
-      }
+      if(val) { state.masterGrocery.push({name: val, freq: 1}); document.getElementById('newMasterInput').value = ''; openMasterList(); fetch(GOOGLE_SHEETS_API_URL, { method:'POST', body: JSON.stringify({action:'addMasterItem', item: val}) }); }
     }
 
     function getMealTag(name) {
@@ -474,20 +467,6 @@
       } catch { return "Classic Omelette"; }
     }
 
-    function switchTab(tabId, btn) {
-      if(navigator.vibrate) navigator.vibrate(15);
-      document.querySelectorAll('.page, .nav-item').forEach(el => el.classList.remove('active'));
-      document.getElementById(`page-${tabId}`).classList.add('active');
-      btn.classList.add('active');
-      
-      if(tabId === 'cart') {
-        document.getElementById('openDataBtn').style.display = 'none';
-        renderCart();
-      } else {
-        document.getElementById('openDataBtn').style.display = 'flex';
-      }
-    }
-
     function renderReviewQueue() {
       els.reviewQueueList.innerHTML = '';
       if (pendingApprovals.length === 0) { els.reviewQueuePanel.style.display = 'none'; return; }
@@ -504,7 +483,7 @@
             </select>
             <span style="font-weight:600; font-family:var(--font-display); font-size:1.25rem;">${escapeHtml(item.meal)}</span>
           </div>
-          <button class="review-queue-remove" data-remove-queue="${idx}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+          <button class="review-queue-remove" data-remove-queue="${idx}">✕</button>
         `;
         els.reviewQueueList.appendChild(li);
       });
@@ -552,7 +531,7 @@
       let bookmarkHTML = '';
       if (item.source !== 'db') {
          const category = item.time.replace(/^[^a-zA-Z]+/, '').trim().split(' ')[0].toLowerCase();
-         const normalized = normalizeSuggestionToMealName(item.name);
+         const normalized = String(item.name).replace(/^Try:\s*/i, '').replace(/^Internet search:\s*/i, '').trim();
          const isQueued = pendingApprovals.some(m => m.category === category && m.meal.toLowerCase() === normalized.toLowerCase());
          bookmarkHTML = isQueued 
           ? `<button class="bookmark-btn added" type="button" data-action="toggle-queue" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg></button>`
@@ -564,7 +543,7 @@
           <div class="card-header-row">
             <div class="card-header-left"><span class="eyebrow">${item.time}</span><div style="display:flex; gap:8px;"><span class="badge ${tag.cls}">${tag.text}</span>${item.cookedRecently ? '<span class="badge warning">Cooked recently</span>' : ''}</div></div>
             <div class="card-header-right" style="display:flex; gap:8px;">
-               <button class="bookmark-btn" type="button" data-action="add-to-cart" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg></button>
+               <button class="bookmark-btn" type="button" data-action="add-to-cart" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 20a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm7 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-9.8-2h11.2a2 2 0 0 0 1.9-1.4l2.4-7.6A1 1 0 0 0 21 8H6.5l-.8-3.4A2 2 0 0 0 3.8 3H2v2h1.8l3.6 14.5A2 2 0 0 0 9.2 21h8.6"/></svg></button>
                ${bookmarkHTML}
             </div>
           </div>
@@ -579,21 +558,10 @@
           <button class="card-action" type="button" data-action="toggle-explore" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> Explore</button>
         </div>
         <div id="explore-${index}" class="explore-area">
-          <button class="card-action" data-action="google" data-index="${index}">
-            <svg width="20" height="20" viewBox="0 0 24 24" style="margin-right:4px;"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 24c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 21.53 7.7 24 12 24z"/><path fill="#FBBC05" d="M5.84 15.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V8.06H2.18C1.43 9.55 1 11.22 1 13s.43 3.45 1.18 4.94l3.66-2.84z"/><path fill="#EA4335" d="M12 4.84c1.61 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.63 14.97 0 12 0 7.7 0 3.99 2.47 2.18 6.06l3.66 2.84c.87-2.6 3.3-4.06 6.16-4.06z"/></svg> Google
-          </button>
-          <button class="card-action" data-action="youtube" data-index="${index}">
-            <svg width="20" height="20" viewBox="0 0 24 24" style="margin-right:4px;"><path fill="#FF0000" d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg> YouTube
-          </button>
-          <button class="card-action" style="color:var(--color-success);" data-action="nutrition" data-index="${index}">
-            <span style="font-size:1.2rem; margin-right:4px;">💪</span> Health
-          </button>
-          <button class="card-action" data-action="internet" data-index="${index}">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Similar
-          </button>
-          <button class="card-action" style="color:var(--color-bg); background:var(--color-success);" data-action="whatsapp" data-index="${index}">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> WhatsApp
-          </button>
+          <button class="card-action" data-action="google" data-index="${index}"><svg width="24" height="24" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 24c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 21.53 7.7 24 12 24z"/><path fill="#FBBC05" d="M5.84 15.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V8.06H2.18C1.43 9.55 1 11.22 1 13s.43 3.45 1.18 4.94l3.66-2.84z"/><path fill="#EA4335" d="M12 4.84c1.61 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.63 14.97 0 12 0 7.7 0 3.99 2.47 2.18 6.06l3.66 2.84c.87-2.6 3.3-4.06 6.16-4.06z"/></svg></button>
+          <button class="card-action" data-action="youtube" data-index="${index}"><svg width="24" height="24" viewBox="0 0 24 24"><path fill="#FF0000" d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg></button>
+          <button class="card-action" style="color:var(--color-success);" data-action="nutrition" data-index="${index}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg></button>
+          <button class="card-action" data-action="internet" data-index="${index}"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M17 1l4 4-4 4 M7 23l-4-4 4-4" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 5H9a8 8 0 0 0-8 8 M3 19h12a8 8 0 0 0 8-8" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div>
       `;
     }
@@ -691,8 +659,6 @@
       }
     }
 
-    function normalizeSuggestionToMealName(name) { return String(name).replace(/^Try:\s*/i, '').replace(/^Internet search:\s*/i, '').trim(); }
-
     function renderSpreadsheetModal() {
       refreshCounts();
       els.tableSections.innerHTML = '';
@@ -705,43 +671,68 @@
       });
     }
 
-    function openModal(modal) { 
-      modal.classList.add('open'); 
-      modal.setAttribute('aria-hidden','false'); 
-      if(modal.id === 'dataModal') els.cookBookScrollArea.scrollTop = 0;
-    }
+    function openModal(modal) { modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); if(modal.id === 'dataModal') els.cookBookScrollArea.scrollTop = 0; }
     function closeModal(modal) { modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
 
-    const UNIT_TYPES = {
-      "Milk": ["500 ml", "1 L", "2 L"], "Curd": ["200 g", "500 g", "1 kg"], "Potatoes": ["500 g", "1 kg", "2 kg"],
-      "Capsicum": ["250 g", "500 g", "1 kg"], "Flour": ["1 kg", "2 kg", "5 kg"], "Eggs": ["6 Pack", "12 Pack", "30 Pack"],
-      "default": ["1", "2", "3", "4", "5"]
-    };
+    // --- Dynamic Quantity Logic ---
+    function getUnitOptions(unit) {
+      const u = String(unit || '').toLowerCase();
+      if (u === 'kg') return [0.25, 0.5, 1, 1.5, 2, 5];
+      if (u === 'g') return [50, 100, 200, 250, 500];
+      if (u === 'l' || u === 'liter') return [0.5, 1, 1.5, 2, 5];
+      if (u === 'ml') return [100, 250, 500, 750];
+      if (u === 'bunch' || u === 'bunches') return [1, 2, 3, 4];
+      return [1, 2, 3, 4, 5, 6, 12]; // pcs / default
+    }
 
-    const AI_MAP = { "bread": "Butter", "milk": "Coffee", "eggs": "Bread", "potatoes": "Onions", "capsicum": "Paneer" };
+    async function fetchNutritionData(mealName) {
+      if(navigator.vibrate) navigator.vibrate(15);
+      const loader = document.getElementById('ai-loading-overlay');
+      document.getElementById('ai-loading-text').innerText = "Analyzing nutritional macros...";
+      loader.classList.add('active');
+
+      try {
+        const res = await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'breakdownRecipe', mealName: mealName }) });
+        const data = await res.json();
+        loader.classList.remove('active');
+        
+        const nutrition = data.data?.nutrition || { calories: "N/A", protein: "N/A", carbs: "N/A", fats: "N/A" };
+        document.getElementById('nutritionGridContent').innerHTML = `
+          <div class="nutrient"><span class="nutrient-val">${nutrition.calories}</span><span class="nutrient-label">Calories</span></div>
+          <div class="nutrient"><span class="nutrient-val">${nutrition.protein}</span><span class="nutrient-label">Protein</span></div>
+          <div class="nutrient"><span class="nutrient-val">${nutrition.carbs}</span><span class="nutrient-label">Carbs</span></div>
+          <div class="nutrient"><span class="nutrient-val">${nutrition.fats}</span><span class="nutrient-label">Fat</span></div>
+        `;
+        document.getElementById('nutritionModalTitle').innerText = mealName;
+        openModal(document.getElementById('nutritionModal'));
+      } catch (e) {
+        loader.classList.remove('active');
+        alert("Failed to fetch nutrition data.");
+      }
+    }
 
     async function breakdownRecipeToCart(mealName) {
       if(navigator.vibrate) navigator.vibrate(15);
       const loader = document.getElementById('ai-loading-overlay');
+      document.getElementById('ai-loading-text').innerText = "Breaking down core ingredients & quantities...";
       loader.classList.add('active');
 
       try {
-        const res = await fetch(GOOGLE_SHEETS_API_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'breakdownRecipe', mealName: mealName })
-        });
-        const data = await res.json();
-        let ingredients = data.ingredients || [mealName];
+        const res = await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'breakdownRecipe', mealName: mealName }) });
+        const result = await res.json();
+        
+        let ingredients = result.data?.ingredients || [{name: mealName, unit: "pcs"}];
         
         ingredients.forEach(ing => {
-          const isRecent = state.orderHistory.some(h => h.item.toLowerCase() === ing.toLowerCase());
-          if(!state.cart.some(c => c.name.toLowerCase() === ing.toLowerCase())) {
-            state.cart.push({ name: ing, quantity: "1", checked: !isRecent, recent: isRecent, flag: isRecent ? "Ordered in last 7 days" : "" });
+          const isRecent = state.orderHistory.some(h => h.item.toLowerCase() === ing.name.toLowerCase());
+          if(!state.cart.some(c => c.name.toLowerCase() === ing.name.toLowerCase())) {
+            const defaultQty = getUnitOptions(ing.unit)[0];
+            state.cart.push({ name: ing.name, quantity: defaultQty, unit: ing.unit || 'pcs', checked: !isRecent, recent: isRecent, flag: isRecent ? "Ordered in last 7 days" : "" });
           }
         });
         syncCartToBackend();
         loader.classList.remove('active');
-        switchTab('cart', document.querySelectorAll('.nav-item')[1]);
+        switchTab('cart');
       } catch (e) {
         loader.classList.remove('active');
         alert("Failed to connect to AI. Please check API Key and Google Script.");
@@ -765,12 +756,9 @@
         const safeId = item.name.replace(/[^a-zA-Z0-9]/g, '');
         return `
         <div class="swipe-wrapper" id="swipe-item-master-${safeId}" ontouchstart="handleSwipeStart(event, 'master-${safeId}', 'master')" ontouchmove="handleSwipeMove(event, 'master-${safeId}')" ontouchend="handleSwipeEnd(event, 'master-${safeId}', '${escapeHtml(item.name)}')">
-          <div class="swipe-bg">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-          </div>
+          <div class="swipe-bg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
           <div class="swipe-item grocery-item ${inCart ? 'checked' : ''} ${isRecent && !inCart ? 'dimmed' : ''}" onclick="toggleMasterItem('${escapeHtml(item.name)}', ${isRecent})">
-            <div class="checkbox">${inCart ? '✓' : ''}</div>
-            <div class="item-name">${escapeHtml(item.name)}</div>
+            <div class="checkbox">${inCart ? '✓' : ''}</div><div class="item-name">${escapeHtml(item.name)}</div>
           </div>
         </div>`;
       }).join('');
@@ -786,7 +774,7 @@
       if(navigator.vibrate) navigator.vibrate(15);
       const idx = state.cart.findIndex(c => c.name.toLowerCase() === name.toLowerCase());
       if(idx > -1) state.cart.splice(idx, 1);
-      else state.cart.push({ name, quantity: "1", checked: true, recent: isRecent, flag: isRecent ? "Ordered in last 7 days" : "" });
+      else state.cart.push({ name, quantity: 1, unit: 'pcs', checked: true, recent: isRecent, flag: isRecent ? "Ordered in last 7 days" : "" });
       openMasterList(); renderCart(); syncCartToBackend();
     }
 
@@ -796,16 +784,15 @@
 
       state.cart.forEach((item, index) => {
         if(item.checked) selectedNames.push(item.name.toLowerCase());
+        const displayUnit = item.unit === 'pcs' ? '' : item.unit;
         const html = `
           <div class="swipe-wrapper" id="swipe-item-cart-${index}" ontouchstart="handleSwipeStart(event, 'cart-${index}', 'cart')" ontouchmove="handleSwipeMove(event, 'cart-${index}')" ontouchend="handleSwipeEnd(event, 'cart-${index}', ${index})">
-              <div class="swipe-bg">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-              </div>
+              <div class="swipe-bg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
               <div class="swipe-item grocery-item ${item.checked ? 'checked' : ''} ${item.recent && !item.checked ? 'dimmed' : ''}" onclick="toggleCartItem(${index})">
                   <div class="checkbox">${item.checked ? '✓' : ''}</div>
                   <div class="item-details">
                       <div class="item-text-group"><div class="item-name">${escapeHtml(item.name)}</div>${item.flag ? `<div class="item-flag">🕒 ${item.flag}</div>` : ''}</div>
-                      <div class="qty-badge" onclick="openPicker(event, ${index})">${item.quantity} ▾</div>
+                      <div class="qty-badge" onclick="openPicker(event, ${index})">${item.quantity} ${displayUnit} ▾</div>
                   </div>
               </div>
           </div>`;
@@ -816,38 +803,24 @@
       document.getElementById('dimmed-items').innerHTML = dimmedHtml || '<p class="subtle">No recently bought items.</p>';
 
       const aiStrip = document.getElementById('ai-recommendations');
-      const aiContent = document.getElementById('ai-scroll-content');
-      let recos = new Set();
-      selectedNames.forEach(n => { if(AI_MAP[n]) recos.add(AI_MAP[n]); });
-      const finalRecos = [...recos].filter(r => !state.cart.some(c => c.name.toLowerCase() === r.toLowerCase()));
-      
-      if(finalRecos.length > 0) {
-        aiContent.innerHTML = finalRecos.map(r => `<div class="ai-pill" onclick="toggleMasterItem('${escapeHtml(r)}', false)">+ ${escapeHtml(r)}</div>`).join('');
-        aiStrip.style.display = 'block';
-      } else { aiStrip.style.display = 'none'; }
+      aiStrip.style.display = 'none'; // Simple setup
     }
 
-    function toggleCartItem(index) {
-      if(navigator.vibrate) navigator.vibrate(15);
-      state.cart[index].checked = !state.cart[index].checked;
-      renderCart(); syncCartToBackend();
-    }
+    function toggleCartItem(index) { if(navigator.vibrate) navigator.vibrate(15); state.cart[index].checked = !state.cart[index].checked; renderCart(); syncCartToBackend(); }
 
     let currentEditIndex = null;
     function openPicker(event, index) {
       event.stopPropagation(); if(navigator.vibrate) navigator.vibrate(15);
       currentEditIndex = index; const item = state.cart[index];
-      const opts = UNIT_TYPES[item.name] || UNIT_TYPES["default"];
+      const opts = getUnitOptions(item.unit);
+      
       document.getElementById('picker-title').innerText = item.name;
-      document.getElementById('picker-grid').innerHTML = opts.map(o => `<button class="unit-btn" onclick="selectQuantity('${o}')">${o}</button>`).join('');
+      document.getElementById('picker-unit-label').innerText = `Select Amount in ${item.unit || 'Pieces'}`;
+      document.getElementById('picker-grid').innerHTML = opts.map(o => `<button class="unit-btn" onclick="selectQuantity(${o})">${o}</button>`).join('');
       document.getElementById('picker-overlay').classList.add('open');
       document.getElementById('bottom-sheet').classList.add('active');
     }
-    function selectQuantity(qty) {
-      if(navigator.vibrate) navigator.vibrate(15);
-      state.cart[currentEditIndex].quantity = qty;
-      closePicker(); renderCart(); syncCartToBackend();
-    }
+    function selectQuantity(qty) { if(navigator.vibrate) navigator.vibrate(15); state.cart[currentEditIndex].quantity = qty; closePicker(); renderCart(); syncCartToBackend(); }
     function closePicker() { document.getElementById('picker-overlay').classList.remove('open'); document.getElementById('bottom-sheet').classList.remove('active'); }
 
     let shoppingQueue = []; let shoppingIndex = 0;
@@ -855,75 +828,46 @@
       if(navigator.vibrate) navigator.vibrate(15);
       shoppingQueue = state.cart.filter(i => i.checked);
       if(shoppingQueue.length === 0) return alert("Check at least one item.");
-      
-      // Update Master List
-      const itemsToAdd = shoppingQueue.map(i => i.name);
-      fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateMasterList', items: itemsToAdd }) }).catch(e=>e);
-
+      fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateMasterList', items: shoppingQueue.map(i => i.name) }) }).catch(e=>e);
       shoppingIndex = 0; updateGuidedUI(); document.getElementById('guided-overlay').classList.add('active');
       setTimeout(() => window.location.href = `swiggy://instamart/search?query=${encodeURIComponent(shoppingQueue[0].name)}`, 300);
     }
-    
     function updateGuidedUI() {
       const item = shoppingQueue[shoppingIndex];
       document.getElementById('shopping-progress').innerText = `Item ${shoppingIndex + 1} of ${shoppingQueue.length}`;
-      document.getElementById('shopping-item-name').innerText = `${item.quantity} ${item.name}`;
+      document.getElementById('shopping-item-name').innerText = `${item.quantity} ${item.unit === 'pcs' ? '' : item.unit} ${item.name}`;
     }
-    
     function markDoneAndNext() {
       if(navigator.vibrate) navigator.vibrate(15);
       const current = shoppingQueue[shoppingIndex];
       const dbIdx = state.cart.findIndex(c => c.name.toLowerCase() === current.name.toLowerCase());
       if(dbIdx > -1) { state.cart[dbIdx].checked = false; state.cart[dbIdx].recent = true; state.cart[dbIdx].flag = "Just Bought"; }
-      
       fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateHistory', items: [current.name] }) }).catch(e=>e);
-      
       shoppingIndex++;
       if(shoppingIndex >= shoppingQueue.length) { closeGuidedShopping(); syncCartToBackend(); }
       else { updateGuidedUI(); setTimeout(() => window.location.href = `swiggy://instamart/search?query=${encodeURIComponent(shoppingQueue[shoppingIndex].name)}`, 300); }
     }
     function closeGuidedShopping() { if(navigator.vibrate) navigator.vibrate(15); document.getElementById('guided-overlay').classList.remove('active'); renderCart(); }
 
-    async function syncCartToBackend() {
-      if(!GOOGLE_SHEETS_API_URL || GOOGLE_SHEETS_API_URL.includes("PASTE")) return;
-      try { await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'syncCart', cart: state.cart }) }); } catch(e) {}
-    }
+    async function syncCartToBackend() { if(!GOOGLE_SHEETS_API_URL || GOOGLE_SHEETS_API_URL.includes("PASTE")) return; try { await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'syncCart', cart: state.cart }) }); } catch(e) {} }
 
     document.getElementById('generateBtn').addEventListener('click', generateDefaultSuggestions);
     document.getElementById('submitApprovalBtn').addEventListener('click', submitQueueForApproval);
-    
-    document.getElementById('surpriseBtn').addEventListener('click', async function() {
-      els.suggestions.innerHTML = '<div class="empty"><h3>Fetching inspirations...</h3></div>';
-      const [b, l, d] = await Promise.all([ fetchSurpriseMealFromInternet(), fetchSurpriseMealFromInternet(), fetchSurpriseMealFromInternet() ]);
-      renderOutputDeck([ buildCard("Breakfast", b, 'internet'), buildCard("Lunch", l, 'internet'), buildCard("Dinner", d, 'internet') ]);
-    });
-    
-    document.getElementById('fridgeBtn').addEventListener('click', () => openModal(els.fridgeModal));
     document.getElementById('submitFridgeIngredientsBtn').addEventListener('click', runFridgeMatchingPipeline);
-
     document.getElementById('openDataBtn').addEventListener('click', () => { openModal(els.dataModal); renderSpreadsheetModal(); });
     document.getElementById('closeDataBtn').addEventListener('click', () => closeModal(els.dataModal));
     document.getElementById('closeFridgeBtn').addEventListener('click', () => closeModal(els.fridgeModal));
     
     document.querySelectorAll('[data-open-cookbook]').forEach(stat => {
       stat.addEventListener('click', () => {
-        const category = stat.dataset.openCookbook;
-        openModal(els.dataModal);
-        renderSpreadsheetModal();
-        setTimeout(() => {
-          const target = els.tableSections.querySelector(`[data-section="${category}"]`);
-          if (target && els.cookBookScrollArea) {
-             const topPos = target.offsetTop;
-             els.cookBookScrollArea.scrollTo({ top: topPos - 20, behavior: 'smooth' });
-          }
-        }, 150);
+        const category = stat.dataset.openCookbook; openModal(els.dataModal); renderSpreadsheetModal();
+        setTimeout(() => { const target = els.tableSections.querySelector(`[data-section="${category}"]`); if (target && els.cookBookScrollArea) { els.cookBookScrollArea.scrollTo({ top: target.offsetTop - 20, behavior: 'smooth' }); } }, 150);
       });
     });
 
     els.suggestions.addEventListener('click', async event => {
       const btn = event.target.closest('[data-action]'); if (!btn) return;
-      const idx = Number(btn.dataset.index);
-      const action = btn.dataset.action;
+      const idx = Number(btn.dataset.index); const action = btn.dataset.action;
 
       if (action === 'prev') await refreshSpecificCategoryCard(idx, 'prev');
       if (action === 'next') await refreshSpecificCategoryCard(idx, 'next');
@@ -931,47 +875,18 @@
       if (action === 'lock') lockChoiceIntoExclusionMemory(idx);
       if (action === 'google') window.open(`https://www.google.com/search?q=${encodeURIComponent(state.currentSuggestions[idx].name + ' recipe')}`, '_blank');
       if (action === 'youtube') window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(state.currentSuggestions[idx].name + ' recipe')}`, '_blank');
-      if (action === 'nutrition') window.open(`https://www.google.com/search?q=${encodeURIComponent(state.currentSuggestions[idx].name + ' nutrition')}`, '_blank');
+      if (action === 'nutrition') fetchNutritionData(state.currentSuggestions[idx].name);
       if (action === 'add-to-cart') breakdownRecipeToCart(state.currentSuggestions[idx].name);
+      if (action === 'internet') window.open(`https://www.google.com/search?q=${encodeURIComponent(String(state.currentSuggestions[idx].name).replace(/^Try:\s*/, '').replace(/^Internet search:\s*/, '').trim() + ' alternatives')}`, '_blank', 'noopener,noreferrer');
       
-      if (action === 'internet') {
-        const card = state.currentSuggestions[idx];
-        const base = card.name.replace(/^Try:\s*/, '').replace(/^Internet search:\s*/, '').trim();
-        window.open(`https://www.google.com/search?q=${encodeURIComponent(base + ' alternatives')}`, '_blank', 'noopener,noreferrer');
-      }
-      
-      if (action === 'whatsapp') {
-         const card = state.currentSuggestions[idx];
-         const mealName = card.name;
-         const googleLink = `https://www.google.com/search?q=${encodeURIComponent(mealName + ' recipe')}`;
-         const ytLink = `https://www.youtube.com/results?search_query=${encodeURIComponent(mealName + ' recipe')}`;
-         const text = `*${mealName}*\n\nGoogle Recipe:\n${googleLink}\n\nYouTube Recipe:\n${ytLink}`;
-         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
-      }
-
       if (action === 'toggle-queue') {
         const card = state.currentSuggestions[idx];
-        const rawTime = card.time.replace(/^[^a-zA-Z]+/, '').trim();
-        const category = rawTime.split(' ')[0].toLowerCase();
-        const normalized = normalizeSuggestionToMealName(card.name);
-        
+        const category = card.time.replace(/^[^a-zA-Z]+/, '').trim().split(' ')[0].toLowerCase();
+        const normalized = String(card.name).replace(/^Try:\s*/i, '').replace(/^Internet search:\s*/i, '').trim();
         if (!normalized || normalized.length < 3 || !['breakfast','lunch','dinner'].includes(category)) return;
-
         const qIndex = pendingApprovals.findIndex(m => m.category === category && m.meal.toLowerCase() === normalized.toLowerCase());
-        
-        if (qIndex > -1) {
-           pendingApprovals.splice(qIndex, 1);
-           btn.classList.remove('added');
-           btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>`;
-        } else {
-           if (state.db[category].some(m => String(m).toLowerCase() === normalized.toLowerCase())) {
-               alert("Already in database!");
-               return;
-           }
-           pendingApprovals.push({ category, meal: normalized });
-           btn.classList.add('added');
-           btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>`;
-        }
+        if (qIndex > -1) { pendingApprovals.splice(qIndex, 1); btn.classList.remove('added'); btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>`; } 
+        else { if (state.db[category].some(m => String(m).toLowerCase() === normalized.toLowerCase())) { alert("Already in database!"); return; } pendingApprovals.push({ category, meal: normalized }); btn.classList.add('added'); btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>`; }
         renderReviewQueue();
       }
     });
@@ -979,15 +894,9 @@
     async function loadFromGoogleSheets() {
       if (!GOOGLE_SHEETS_API_URL || GOOGLE_SHEETS_API_URL.includes("PASTE")) { dedupeDb(); refreshCounts(); renderOutputDeck([]); renderSpreadsheetModal(); return; }
       try {
-        const res = await fetch(`${GOOGLE_SHEETS_API_URL}?action=getAllData`);
-        const data = await res.json();
-        if (data.breakfast) state.db.breakfast = data.breakfast;
-        if (data.lunch) state.db.lunch = data.lunch;
-        if (data.dinner) state.db.dinner = data.dinner;
-        if (data.masterGrocery) state.masterGrocery = data.masterGrocery;
-        if (data.orderHistory) state.orderHistory = data.orderHistory;
-        if (data.cart) state.cart = data.cart;
-        
+        const res = await fetch(`${GOOGLE_SHEETS_API_URL}?action=getAllData`); const data = await res.json();
+        if (data.breakfast) state.db.breakfast = data.breakfast; if (data.lunch) state.db.lunch = data.lunch; if (data.dinner) state.db.dinner = data.dinner;
+        if (data.masterGrocery) state.masterGrocery = data.masterGrocery; if (data.orderHistory) state.orderHistory = data.orderHistory; if (data.cart) state.cart = data.cart;
         dedupeDb(); refreshCounts(); renderSpreadsheetModal();
         els.suggestions.innerHTML = `<div class="empty"><h3>Ready to Plan?</h3><p class="subtle">Generate balanced meal options, search nutrition quickly, and find ingredient-based fallbacks online.</p></div>`;
       } catch (e) {
