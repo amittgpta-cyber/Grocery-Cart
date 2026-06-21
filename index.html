@@ -1,485 +1,763 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Household Hub: MealSync & Groceries</title>
-    <style>
-        :root {
-            --bg-color: #F5F7FA;
-            --surface-color: #FFFFFF;
-            --text-main: #1A1C1E;
-            --text-muted: #73777F;
-            --primary-accent: #2E7D32; 
-            --secondary-accent: #FF9800; 
-            --glass-bg: rgba(255, 255, 255, 0.85);
-            --border-color: rgba(0, 0, 0, 0.08);
-            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <title>Meal Sync Pro</title>
+  <meta name="theme-color" content="#000000" />
+  <link rel="manifest" href="/Meal-generator/manifest.json">
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=boska@400,500,700&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root, [data-theme="light"] {
+      --color-bg: #ffffff; --color-surface: #f7f6f2; --color-surface-2: #f2f1ed; --color-surface-offset: #ebeae6;
+      --color-divider: #e0deda; --color-text: #161514; --color-text-muted: #6b6965; 
+      --color-primary: #01696f; --color-secondary: #e8af34; --color-success: #38661c; --color-warning: #c26502; --color-error: #8f266d;
+      --radius-btn: 2rem; --radius-xl: 1.5rem; --radius-2xl: 2rem;
+      --shadow-sm: 0 4px 12px oklch(0.2 0.01 80 / 0.04); --shadow-md: 0 12px 32px oklch(0.2 0.01 80 / 0.08);
+      --font-body: 'General Sans', Inter, sans-serif; --font-display: 'Boska', Georgia, serif;
+      --ease-android: cubic-bezier(0.2, 0, 0, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    [data-theme="dark"] {
+      --color-bg: #000000; --color-surface: #121110; --color-surface-2: #1a1918; --color-surface-offset: #22201e; 
+      --color-border: rgba(255, 255, 255, 0.05); --color-divider: rgba(255, 255, 255, 0.08); 
+      --color-text: #e8e6e3; --color-text-muted: #918f8b; 
+      --color-primary: #80c7d2; --color-secondary: #e6c57a; --color-success: #78a85d; --color-warning: #e39d5b; --color-error: #c975ae;
+      --shadow-sm: 0 8px 24px rgba(0,0,0, 0.8); --shadow-md: 0 16px 40px rgba(0,0,0, 1);
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body { min-height: 100dvh; font-family: var(--font-body); font-size: 1rem; line-height: 1.6; background: var(--color-bg); color: var(--color-text); overflow-x: hidden; padding-bottom: 120px; }
+    button, input, select { font: inherit; color: inherit; outline: none; }
+    button { cursor: pointer; border: none; background: none; }
+    
+    .topbar-wrapper {
+      position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 70rem;
+      padding: 1.5rem 1rem 1rem; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      background: linear-gradient(to bottom, color-mix(in oklab, var(--color-bg) 85%, transparent), transparent);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      mask-image: linear-gradient(to bottom, black 60%, transparent); -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent);
+    }
+    
+    .shell { width: min(100%, 70rem); margin: 0 auto; padding: clamp(6rem, 8vw, 7rem) 0.75rem calc(10rem + env(safe-area-inset-bottom)); }
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-logo { width: 2.75rem; height: 2.75rem; border-radius: 1rem; display: grid; place-items: center; background: linear-gradient(135deg, var(--color-primary), color-mix(in oklab, var(--color-primary) 40%, var(--color-secondary))); color: #000; box-shadow: var(--shadow-sm); }
+    h1 { font-family: var(--font-display); font-size: 1.75rem; font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
+    .header-actions { display: flex; gap: 0.5rem; align-items: center; }
+    
+    .icon-btn, .ghost-btn, .primary-btn, .accent-btn, .success-btn { min-height: 52px; border-radius: var(--radius-btn); transition: all 0.2s var(--ease-android); display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; }
+    button:active, .card-action:active, .bookmark-btn:active, .stat:active { transform: scale(0.92); }
+    .icon-btn { width: 52px; border: 1px solid var(--color-border); background: var(--color-surface); }
+    .primary-btn, .accent-btn, .success-btn, .ghost-btn { padding: 0.75rem 1.5rem; }
+    .ghost-btn { background: var(--color-surface); border: 1px solid var(--color-border); }
+    .primary-btn { background: var(--color-primary); color: var(--color-bg); }
+    .accent-btn { background: var(--color-secondary); color: var(--color-bg); }
+    .success-btn { background: var(--color-success); color: var(--color-bg); }
+    
+    .hero { margin-bottom: 2rem; }
+    .hero-grid { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem; padding: 0 0.5rem; }
+    .hero h2 { font-family: var(--font-display); font-size: 2.5rem; line-height: 1; font-weight: 500; margin: 0; letter-spacing: -0.02em; }
+    .subtle { color: var(--color-text-muted); font-size: 0.875rem; }
+    
+    .stats { display: flex; flex-direction: row; gap: 0.75rem; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .stats::-webkit-scrollbar { display: none; }
+    .stat { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; padding: 1rem 0.875rem; background: var(--color-surface); border-radius: 1.5rem; border: 1px solid var(--color-border); min-width: 100px; transition: all 0.2s var(--ease-android); box-shadow: var(--shadow-sm); }
+    .stat strong { font-size: 1.5rem; margin: 0; font-weight: 700; font-family: var(--font-display); }
+    .stat .subtle { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin: 0; }
+    
+    @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(50px) scale(0.96); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+    
+    .cards { display: grid; gap: 1.5rem; }
+    .meal-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-2xl); overflow: hidden; box-shadow: var(--shadow-md); display: flex; flex-direction: column; animation: slideUpFade 0.6s var(--ease-spring) backwards; }
+    .meal-card.locked { border-color: color-mix(in oklab, var(--color-success) 50%, transparent); box-shadow: 0 0 20px color-mix(in oklab, var(--color-success) 10%, transparent); }
+    .meal-main { padding: 1.5rem; display: grid; gap: 0.5rem; }
+    
+    .card-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .card-header-left { display: flex; align-items: center; gap: 10px; }
+    .eyebrow { font-size: 0.8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--color-text-muted); font-weight: 700; }
+    .badge { padding: 0.35rem 0.875rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; white-space: nowrap; display: inline-block; }
+    .tag-veg { background: color-mix(in oklab, var(--color-success) 15%, transparent); color: var(--color-success); border: 1px solid color-mix(in oklab, var(--color-success) 20%, transparent); }
+    .tag-egg { background: color-mix(in oklab, var(--color-secondary) 15%, transparent); color: var(--color-secondary); border: 1px solid color-mix(in oklab, var(--color-secondary) 20%, transparent); }
+    .tag-nonveg { background: color-mix(in oklab, var(--color-error) 15%, transparent); color: var(--color-error); border: 1px solid color-mix(in oklab, var(--color-error) 20%, transparent); }
+    
+    .bookmark-btn { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--color-surface-2); border: 1px solid var(--color-border); color: var(--color-text); transition: all 0.3s var(--ease-spring); cursor: pointer; flex-shrink: 0; }
+    .bookmark-btn.added { background: color-mix(in oklab, var(--color-success) 20%, transparent); color: var(--color-success); border-color: var(--color-success); transform: scale(1.05); }
 
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #000000;
-                --surface-color: #1A1A1A; 
-                --text-main: #E2E2E2;
-                --text-muted: #8E918F;
-                --primary-accent: #4CAF50; 
-                --glass-bg: rgba(26, 26, 26, 0.85);
-                --border-color: rgba(255, 255, 255, 0.1);
-                --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-            }
-        }
+    .meal-title { font-size: clamp(2rem, 7vw, 2.8rem); line-height: 1.05; font-family: var(--font-display); font-weight: 600; color: var(--color-text); letter-spacing: -0.03em; margin-bottom: 0.5rem; }
+    .nav-buttons-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: auto; }
+    .card-action { min-height: 52px; font-weight: 600; font-size: 1rem; border: 1px solid var(--color-border); border-radius: 1.25rem; background: var(--color-surface-2); color: var(--color-text); cursor: pointer; transition: all 0.2s var(--ease-android); display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0.5rem 1rem; }
+    .card-action:disabled { opacity: 0.4; cursor: not-allowed; }
+    .card-action.locked { background: var(--color-success) !important; color: var(--color-bg) !important; border-color: var(--color-success) !important; }
+    .main-actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; padding: 0 1.5rem 1.5rem; }
+    
+    .explore-area { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 0.75rem; padding: 0 1.5rem; max-height: 0; opacity: 0; margin-top: -0.5rem; transition: all 0.4s var(--ease-spring); border-top: 1px solid transparent; }
+    .explore-area::-webkit-scrollbar { display: none; }
+    .explore-area.open { max-height: 120px; opacity: 1; border-top-color: var(--color-divider); padding-top: 1.5rem; padding-bottom: 1.5rem; margin-top: 0; }
+    .explore-area .card-action { flex-shrink: 0; min-height: 48px; border-radius: 2rem; font-size: 0.9rem; padding: 0.5rem 1.25rem; white-space: nowrap; }
+    
+    .empty { padding: 3rem 2rem; text-align: left; background: var(--color-surface); border-radius: var(--radius-2xl); border: 1px solid var(--color-border); color: var(--color-text-muted); font-size: 1.125rem; }
+    .empty h3 { color: var(--color-text); margin-bottom: 0.5rem; font-family: var(--font-display); font-size: 2rem; line-height: 1.1; letter-spacing: -0.02em; }
+    
+    .bottom-console { position: fixed; left: 50%; bottom: max(1.5rem, env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(0); width: calc(100% - 1.5rem); max-width: 600px; padding: 0.5rem; background: color-mix(in oklab, var(--color-surface) 75%, transparent); backdrop-filter: blur(48px) saturate(150%); -webkit-backdrop-filter: blur(48px) saturate(150%); border: 1px solid var(--color-border); border-radius: 3rem; z-index: 20; box-shadow: var(--shadow-md); display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; transition: transform 0.4s var(--ease-spring), opacity 0.3s var(--ease-android); }
+    .bottom-console.hidden { transform: translateX(-50%) translateY(150%); opacity: 0; pointer-events: none; }
+    .console-left { display: flex; }
+    .console-right { display: flex; gap: 0.5rem; flex-grow: 1; justify-content: flex-end; }
+    
+    .modal { position: fixed; inset: 0; background: color-mix(in oklab, #000 85%, transparent); display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 50; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); opacity: 0; transition: opacity 0.3s var(--ease-android); }
+    .modal.open { display: flex; opacity: 1; }
+    .dialog { width: min(100%, 40rem); max-height: min(90dvh, 56rem); overflow: hidden; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 2.5rem; box-shadow: var(--shadow-md); display: flex; flex-direction: column; transform: scale(0.95) translateY(30px); transition: all 0.4s var(--ease-spring); }
+    .modal.open .dialog { transform: scale(1) translateY(0); }
+    .dialog-head { padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid var(--color-divider); flex-shrink: 0; background: var(--color-surface); }
+    .dialog-head h4 { font-size: 1.75rem; font-family: var(--font-display); font-weight: 500; display: flex; align-items: center; gap: 12px; margin: 0; letter-spacing: -0.02em; }
+    .dialog-content-scroll { overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; padding-bottom: 2rem; scroll-behavior: smooth; }
+    .dialog-content-scroll::-webkit-scrollbar { display: none; }
+    .dialog-tools { padding: 1.5rem 2rem; display: grid; gap: 1.25rem; border-bottom: 1px solid var(--color-divider); }
+    .import-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .import-label { display: grid; place-items: center; gap: 0.5rem; padding: 1.25rem; text-align: center; background: var(--color-surface-2); border: 1px dashed var(--color-border); border-radius: 1.5rem; cursor: pointer; font-size: 0.875rem; transition: background 0.2s; font-weight: 600; }
+    .hidden { display: none !important; }
+    .dialog-body { padding: 2rem; display: grid; gap: 2rem; }
+    .panel { padding: 1.5rem; background: var(--color-surface-2); border-radius: 2rem; border: 1px solid var(--color-border); }
+    .panel h5 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: .12em; color: var(--color-primary); margin-bottom: 1.25rem; font-weight: 700; }
+    .stack { display: grid; gap: 1rem; }
+    .queue-category-select { background: var(--color-surface-offset); border: 1px solid var(--color-border); color: var(--color-text); border-radius: 1rem; padding: 0.5rem 0.75rem; font-weight: 600; font-size: 0.875rem; }
+    .review-queue-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+    .review-queue-item { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 12px 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 1.5rem; font-size: 1rem; }
+    .review-queue-remove { color: var(--color-error); background: color-mix(in oklab, var(--color-error) 15%, transparent); border-radius: 50%; width: 36px; height: 36px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .input { width: 100%; padding: 1.125rem 1.5rem; border-radius: 1.25rem; border: 1px solid var(--color-border); background: var(--color-bg); font-size: 1rem; transition: border-color 0.2s; color: var(--color-text); }
+    .data-row { display: flex; justify-content: space-between; gap: 0.75rem; align-items: center; padding: 1rem 1.5rem; border: 1px solid var(--color-border); border-radius: 1.25rem; background: var(--color-surface); font-size: 1rem; }
+    
+    /* CART UI ADDITIONS */
+    .page { display: none; animation: fadePeek 0.4s var(--ease-spring); }
+    .page.active { display: block; }
+    @keyframes fadePeek { from { opacity: 0; transform: translateX(20px) scale(0.98); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    
+    .bottom-nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 450px; background: color-mix(in oklab, var(--color-surface) 85%, transparent); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid var(--color-border); border-radius: 40px; display: flex; justify-content: space-around; padding: 12px 8px; box-shadow: var(--shadow-md); z-index: 1000; }
+    .nav-item { background: none; border: none; color: var(--color-text-muted); font-size: 15px; font-weight: 600; padding: 12px 20px; border-radius: 30px; cursor: pointer; transition: all 0.3s var(--ease-spring); display: flex; align-items: center; gap: 6px; }
+    .nav-item.active { background: var(--color-primary); color: var(--color-bg); }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color); color: var(--text-main);
-            margin: 0; padding: 0; padding-bottom: 120px;
-            transition: background-color 0.4s ease, color 0.4s ease;
-            -webkit-tap-highlight-color: transparent;
-        }
+    .grocery-item { background: var(--color-surface); border-radius: 1.5rem; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; border: 1px solid var(--color-border); }
+    .grocery-item.dimmed { opacity: 0.5; background: transparent; }
+    .checkbox { width: 24px; height: 24px; border: 2px solid var(--color-primary); border-radius: 8px; margin-right: 16px; display: flex; align-items: center; justify-content: center; color: transparent; transition: all 0.2s; }
+    .grocery-item.checked .checkbox { background: var(--color-primary); color: var(--color-bg); }
+    .item-details { flex-grow: 1; display: flex; align-items: center; justify-content: space-between; }
+    .item-text-group { display: flex; flex-direction: column; }
+    .item-name { font-size: 18px; font-weight: 600; }
+    .item-flag { font-size: 12px; color: var(--color-warning); margin-top: 4px; font-weight: 600; }
+    .qty-badge { background: color-mix(in oklab, var(--color-primary) 15%, transparent); color: var(--color-primary); padding: 8px 16px; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer; }
+    .swiggy-btn { background: var(--color-primary); color: var(--color-bg); border: none; width: 100%; padding: 18px; border-radius: 1.5rem; font-size: 18px; font-weight: bold; margin-top: 24px; cursor: pointer; box-shadow: 0 8px 20px color-mix(in oklab, var(--color-primary) 30%, transparent); }
 
-        h1, h2, h3 { margin: 0; }
-        .container { padding: 24px 20px; max-width: 600px; margin: 0 auto; }
-        .section-title { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: 24px 0 12px 0; font-weight: bold;}
+    .bottom-sheet { position: fixed; bottom: -100%; left: 0; right: 0; background: var(--color-surface); border-radius: 2rem 2rem 0 0; padding: 2rem 1.5rem 6rem; transition: bottom 0.4s var(--ease-spring); z-index: 2001; border-top: 1px solid var(--color-border); max-height: 80vh; overflow-y: auto; }
+    .bottom-sheet.active { bottom: 0; }
+    .unit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
+    .unit-btn { background: var(--color-surface-2); border: 1px solid var(--color-border); color: var(--color-text); padding: 18px 0; border-radius: 1rem; font-size: 16px; font-weight: 600; cursor: pointer; }
 
-        .bottom-nav {
-            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-            width: 92%; max-width: 450px;
-            background: var(--glass-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--border-color); border-radius: 40px;
-            display: flex; justify-content: space-around; padding: 12px 8px;
-            box-shadow: 0 12px 32px rgba(0,0,0,0.15); z-index: 1000;
-        }
-
-        .nav-item {
-            background: none; border: none; color: var(--text-muted);
-            font-size: 15px; font-weight: 600; padding: 12px 20px; border-radius: 30px;
-            cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        .nav-item.active { background: var(--primary-accent); color: #FFFFFF; }
-
-        .page { display: none; animation: fadePeek 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        .page.active { display: block; }
-        @keyframes fadePeek {
-            from { opacity: 0; transform: translateX(20px) scale(0.98); }
-            to { opacity: 1; transform: translateX(0) scale(1); }
-        }
-
-        .search-bar {
-            width: 100%; padding: 16px 20px; border-radius: 16px; border: 1px solid var(--border-color);
-            background: var(--surface-color); color: var(--text-main); font-size: 16px;
-            margin-bottom: 24px; box-sizing: border-box; box-shadow: var(--card-shadow);
-        }
-
-        .horizontal-scroll { display: flex; overflow-x: auto; gap: 16px; padding-bottom: 16px; scrollbar-width: none; }
-        .horizontal-scroll::-webkit-scrollbar { display: none; }
-
-        .recipe-card {
-            min-width: 200px; background: var(--surface-color); border: 1px solid var(--border-color);
-            border-radius: 20px; padding: 20px; box-shadow: var(--card-shadow); position: relative;
-        }
-        .chef-badge {
-            position: absolute; top: -10px; right: -10px; background: var(--secondary-accent);
-            color: white; font-size: 12px; font-weight: bold; padding: 6px 12px; border-radius: 12px;
-        }
-
-        .day-group { margin-bottom: 24px; }
-        .day-title { font-size: 18px; font-weight: bold; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;}
-        
-        .meal-card {
-            background: var(--surface-color); border: 1px solid var(--border-color);
-            border-radius: 20px; padding: 16px 20px; margin-bottom: 12px;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .meal-info h2 { font-size: 18px; margin-bottom: 4px; }
-        .meal-info p { color: var(--text-muted); font-size: 14px; }
-
-        .smart-cart-btn {
-            background: rgba(76, 175, 80, 0.15); color: var(--primary-accent); border: none;
-            width: 48px; height: 48px; border-radius: 24px; font-size: 20px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-        .smart-cart-btn:active { transform: scale(0.85); background: var(--primary-accent); color: white; }
-
-        .grocery-item {
-            background: var(--surface-color); border-radius: 16px; padding: 16px; margin-bottom: 12px;
-            display: flex; align-items: center; border: 1px solid var(--border-color);
-        }
-        .grocery-item.dimmed { opacity: 0.5; background: transparent; }
-        
-        .checkbox {
-            width: 24px; height: 24px; border: 2px solid var(--primary-accent); border-radius: 8px;
-            margin-right: 16px; display: flex; align-items: center; justify-content: center; color: transparent;
-        }
-        .grocery-item.checked .checkbox { background: var(--primary-accent); color: white; }
-        
-        .item-details { flex-grow: 1; display: flex; align-items: center; justify-content: space-between; }
-        .item-text-group { display: flex; flex-direction: column; }
-        .item-name { font-size: 18px; font-weight: 500; }
-        .item-flag { font-size: 12px; color: #F57C00; margin-top: 4px; font-weight: 600; }
-
-        .qty-badge {
-            background: rgba(76, 175, 80, 0.15); color: var(--primary-accent);
-            padding: 8px 16px; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer;
-        }
-
-        .swiggy-btn {
-            background: var(--primary-accent); color: white; border: none; width: 100%;
-            padding: 18px; border-radius: 16px; font-size: 18px; font-weight: bold;
-            margin-top: 24px; cursor: pointer; box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
-        }
-
-        .overlay-bg {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-            opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 2000;
-        }
-        .overlay-bg.active { opacity: 1; pointer-events: auto; }
-
-        .bottom-sheet {
-            position: fixed; bottom: -100%; left: 0; right: 0;
-            background: var(--surface-color); border-radius: 32px 32px 0 0; padding: 32px 24px 60px 24px;
-            transition: bottom 0.4s cubic-bezier(0.25, 1, 0.5, 1); z-index: 2001;
-            border-top: 1px solid var(--border-color);
-        }
-        .bottom-sheet.active { bottom: 0; }
-
-        .unit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
-        .unit-btn {
-            background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main);
-            padding: 18px 0; border-radius: 16px; font-size: 16px; font-weight: 600; cursor: pointer;
-        }
-
-        .guided-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: var(--bg-color); z-index: 3000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s; padding: 24px; text-align: center;
-        }
-        .guided-overlay.active { opacity: 1; pointer-events: auto; }
-        
-        .shopping-progress { color: var(--text-muted); font-size: 16px; margin-bottom: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-        .shopping-item-name { font-size: 36px; font-weight: bold; margin-bottom: 48px; color: var(--text-main); }
-        
-        .action-btn { background: var(--primary-accent); color: white; border: none; width: 100%; max-width: 350px; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: bold; margin-bottom: 16px; cursor: pointer; box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3); }
-        .action-btn:active { transform: scale(0.95); }
-        .close-shopping { position: absolute; top: 40px; right: 24px; background: none; border: none; font-size: 32px; color: var(--text-muted); cursor: pointer; }
-        
-        #sync-status {
-            text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 12px;
-        }
-    </style>
+    .guided-overlay { position: fixed; inset: 0; background: var(--color-bg); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; padding: 24px; text-align: center; }
+    .guided-overlay.active { opacity: 1; pointer-events: auto; }
+    .shopping-progress { color: var(--color-text-muted); font-size: 16px; margin-bottom: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .shopping-item-name { font-size: 36px; font-weight: bold; margin-bottom: 48px; color: var(--color-text); }
+    .action-btn { background: var(--color-primary); color: var(--color-bg); border: none; width: 100%; max-width: 350px; padding: 20px; border-radius: 1.5rem; font-size: 20px; font-weight: bold; margin-bottom: 16px; cursor: pointer; }
+    .action-btn:active { transform: scale(0.95); }
+    .close-shopping { position: absolute; top: 40px; right: 24px; background: none; border: none; font-size: 32px; color: var(--color-text-muted); cursor: pointer; }
+    
+    .ai-strip { padding: 1rem; background: color-mix(in oklab, var(--color-secondary) 10%, transparent); border: 1px solid color-mix(in oklab, var(--color-secondary) 20%, transparent); border-radius: 1.5rem; margin: 1.5rem 0; }
+    .ai-header { font-size: 0.8rem; text-transform: uppercase; letter-spacing: .12em; color: var(--color-secondary); font-weight: 700; margin-bottom: 0.75rem; }
+    .ai-scroll { display: flex; gap: 0.75rem; overflow-x: auto; scrollbar-width: none; }
+    .ai-scroll::-webkit-scrollbar { display: none; }
+    .ai-pill { background: var(--color-surface); border: 1px solid var(--color-border); padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.875rem; font-weight: 600; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  </style>
 </head>
 <body>
-
-    <div class="overlay-bg" id="picker-overlay" onclick="closePicker()"></div>
-    <div class="bottom-sheet" id="bottom-sheet">
-        <h2 id="picker-title" style="text-align: center; margin-bottom: 8px;">Select Quantity</h2>
-        <div class="unit-grid" id="picker-grid"></div>
+  <div class="topbar-wrapper">
+    <div class="brand">
+      <div class="brand-logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 6c3-2 11-2 14 0"/><path d="M7 10c2-1 8-1 10 0"/><path d="M12 4v16"/><path d="M9 18c0 1.7 1.3 2 3 2s3-.3 3-2"/></svg></div>
+      <div><h1>Meal Sync</h1></div>
     </div>
+    <div class="header-actions">
+      <button class="icon-btn" style="border-radius: 50%;" type="button" data-theme-toggle aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="ghost-btn" style="border-radius: 2rem;" type="button" id="openDataBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> CookBook
+      </button>
+    </div>
+  </div>
 
-    <div class="guided-overlay" id="guided-overlay">
-        <button class="close-shopping" onclick="closeGuidedShopping()">×</button>
-        <div class="shopping-progress" id="shopping-progress">Item 1 of X</div>
-        <div class="shopping-item-name" id="shopping-item-name">Item</div>
+  <div class="shell">
+    <main id="main">
+      
+      <div id="page-plan" class="page active">
+        <section class="hero">
+          <div class="hero-grid"><h2 id="hero-title">Plan Your Day</h2></div>
+          <div class="stats">
+            <article class="stat" data-open-cookbook="breakfast"><span class="subtle">Breakfast</span><strong id="countBreakfast">0</strong></article>
+            <article class="stat" data-open-cookbook="lunch"><span class="subtle">Lunch</span><strong id="countLunch">0</strong></article>
+            <article class="stat" data-open-cookbook="dinner"><span class="subtle">Dinner</span><strong id="countDinner">0</strong></article>
+          </div>
+        </section>
+        <section class="section"><div id="suggestions" class="cards" aria-live="polite"><div class="empty"><h3>Loading database...</h3></div></div></section>
+      </div>
+
+      <div id="page-cart" class="page">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
+          <h2 style="font-family:var(--font-display); font-size:2rem; font-weight:500;">Grocery Cart</h2>
+          <button class="ghost-btn" style="border-radius: 2rem;" onclick="openMasterList()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> Master List
+          </button>
+        </div>
         
-        <button class="action-btn" onclick="markDoneAndNext()">Mark Done & Auto-Search Next</button>
-    </div>
+        <h4 style="font-size:14px; text-transform:uppercase; letter-spacing:1px; color:var(--color-text-muted); margin-bottom:12px; font-weight:bold;">Ready to Buy</h4>
+        <div id="active-items"></div>
 
-    <div class="container">
+        <div id="ai-recommendations" class="ai-strip" style="display:none;">
+          <div class="ai-header">✨ You might also need</div>
+          <div class="ai-scroll" id="ai-scroll-content"></div>
+        </div>
+
+        <h4 style="font-size:14px; text-transform:uppercase; letter-spacing:1px; color:var(--color-text-muted); margin:24px 0 12px; font-weight:bold;">Recently Bought</h4>
+        <div id="dimmed-items"></div>
+
+        <button class="swiggy-btn" onclick="startGuidedShopping()">🛒 Start Guided Shopping</button>
+        <div id="sync-status" style="text-align:center; font-size:12px; color:var(--color-text-muted); margin-top:12px;">Status: Connected</div>
+      </div>
+
+    </main>
+  </div>
+
+  <div class="bottom-console" id="bottomConsole">
+    <div class="console-left">
+      <button id="fridgeBtn" class="icon-btn" style="border-radius: 50%; width: 56px; height: 56px; background: var(--color-surface-offset); border-color: var(--color-border);" type="button" title="Fridge Match">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </button>
+    </div>
+    <div class="console-right">
+      <button id="surpriseBtn" class="accent-btn" style="border-radius: 3rem; min-height: 56px;" type="button">Chef Special</button>
+      <button id="generateBtn" class="primary-btn" type="button" style="border-radius: 3rem; min-height: 56px; padding: 0.75rem 1.5rem;"><span style="font-size:1.4rem; line-height:1; margin-right:4px;">🎲</span> Plan</button>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('plan', this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Plan</button>
+    <button class="nav-item" onclick="switchTab('cart', this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> Cart</button>
+  </div>
+
+  <div class="modal" id="masterListModal" aria-hidden="true">
+    <section class="dialog">
+      <div class="dialog-head">
+        <h4>Master Grocery List</h4>
+        <button class="icon-btn" style="border-radius: 50%;" onclick="closeModal(document.getElementById('masterListModal'))">✕</button>
+      </div>
+      <div class="dialog-content-scroll" style="padding: 1rem;">
+        <h5 style="font-size:0.8rem; text-transform:uppercase; letter-spacing:.12em; color:var(--color-primary); margin:1rem 0;">Last Bought</h5>
+        <div id="ml-last-bought"></div>
+        <h5 style="font-size:0.8rem; text-transform:uppercase; letter-spacing:.12em; color:var(--color-secondary); margin:1rem 0;">Mostly Bought</h5>
+        <div id="ml-mostly-bought"></div>
+        <h5 style="font-size:0.8rem; text-transform:uppercase; letter-spacing:.12em; color:var(--color-text-muted); margin:1rem 0;">The Rest</h5>
+        <div id="ml-the-rest"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal" id="dataModal" aria-hidden="true">
+    <section class="dialog">
+      <div class="dialog-head">
+        <h4><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> CookBook</h4>
+        <button class="icon-btn" style="border-radius: 50%;" id="closeDataBtn" type="button">✕</button>
+      </div>
+      <div class="dialog-content-scroll" id="cookBookScrollArea">
+        <div class="dialog-tools">
+          <div class="import-grid">
+            <label class="import-label" for="fileUploadInput">Upload Document</label>
+            <label class="import-label" for="cameraCaptureInput">Camera Scan</label>
+            <input id="fileUploadInput" class="hidden" type="file" accept="image/*,.pdf,.docx,.xlsx,.xls" />
+            <input id="cameraCaptureInput" class="hidden" type="file" accept="image/*" capture="environment" />
+          </div>
+          <div id="uploadStatus" class="status" role="status"></div>
+          <div class="toolbar-row"><button id="exportExcelBtn" class="ghost-btn" type="button" style="width:100%; border-radius: 1.5rem;">Export Back-up (.xlsx)</button></div>
+        </div>
+        <div class="dialog-body">
+          <section class="panel" id="reviewQueuePanel" style="display:none; border-color:var(--color-success); border-width: 2px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:12px;">
+              <h5 style="margin:0; color:var(--color-success);">Pending Sync Queue</h5>
+              <button id="submitApprovalBtn" class="primary-btn" type="button" style="background: var(--color-success); color: var(--color-bg); border-radius: 1.5rem;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Sync to Sheet</button>
+            </div>
+            <ul class="review-queue-list" id="reviewQueueList"></ul>
+          </section>
+          <section id="dashboardView" class="stack">
+            <div class="panel"><h5>Add manual entry</h5><div class="stack"><input class="input" id="unified-breakfast" placeholder="Breakfast item" /><input class="input" id="unified-lunch" placeholder="Lunch item" /><input class="input" id="unified-dinner" placeholder="Dinner item" /><button id="saveUnifiedBtn" class="primary-btn" style="border-radius: 1.5rem;" type="button">Queue Entry</button></div></div>
+            <div id="tableSections" class="stack"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal" id="fridgeModal" aria-hidden="true">
+    <section class="dialog small">
+      <div class="dialog-head">
+        <div><h4 id="fridgeTitle">Fridge Match</h4><p class="subtle">Searches CookBook. If empty, opens internet search.</p></div>
+        <button class="icon-btn" style="border-radius: 50%;" id="closeFridgeBtn" type="button">✕</button>
+      </div>
+      <div class="dialog-content-scroll"><div class="dialog-body"><div class="panel"><h5>Ingredients</h5><div class="stack"><input id="fridgeIngredientsInput" class="input" placeholder="Paneer, tomato, capsicum..." /><button id="submitFridgeIngredientsBtn" class="success-btn" style="border-radius: 1.5rem;" type="button">Match ingredients</button></div></div></div></div>
+    </section>
+  </div>
+
+  <div class="modal" id="picker-overlay" onclick="closePicker()" style="background:rgba(0,0,0,0.5);"></div>
+  <div class="bottom-sheet" id="bottom-sheet">
+    <h2 id="picker-title" style="text-align: center; margin-bottom: 8px; font-family:var(--font-display);">Select Quantity</h2>
+    <div class="unit-grid" id="picker-grid"></div>
+  </div>
+
+  <div class="guided-overlay" id="guided-overlay">
+    <button class="close-shopping" onclick="closeGuidedShopping()">✕</button>
+    <div class="shopping-progress" id="shopping-progress">Item 1 of X</div>
+    <div class="shopping-item-name" id="shopping-item-name">Item</div>
+    <button class="action-btn" onclick="markDoneAndNext()">Mark Done & Auto-Search Next</button>
+  </div>
+
+  <script>
+    const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbwnw_zAY55dbbvcyE1jxCVa6PKHcnYbwC6s0XPMPWupzX9GK0jZDZUmK2W0HXbCXVQ0rQ/exec";
+
+    (() => {
+      const themeBtn = document.querySelector('[data-theme-toggle]');
+      const root = document.documentElement;
+      let theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      root.setAttribute('data-theme', theme);
+      const renderThemeIcon = () => {
+        themeBtn.innerHTML = theme === 'dark'
+          ? '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+          : '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+      };
+      renderThemeIcon();
+      themeBtn.addEventListener('click', () => { theme = theme === 'dark' ? 'light' : 'dark'; root.setAttribute('data-theme', theme); renderThemeIcon(); });
+    })();
+
+    const freshSeedData = { breakfast: [], lunch: [], dinner: [] };
+
+    const state = {
+      db: structuredClone(freshSeedData),
+      cookingHistory: [],
+      currentSuggestions: [],
+      masterGrocery: [],
+      orderHistory: [],
+      cart: []
+    };
+
+    const els = {
+      suggestions: document.getElementById('suggestions'),
+      counts: { breakfast: document.getElementById('countBreakfast'), lunch: document.getElementById('countLunch'), dinner: document.getElementById('countDinner') },
+      dataModal: document.getElementById('dataModal'),
+      fridgeModal: document.getElementById('fridgeModal'),
+      uploadStatus: document.getElementById('uploadStatus'),
+      tableSections: document.getElementById('tableSections'),
+      reviewQueuePanel: document.getElementById('reviewQueuePanel'),
+      reviewQueueList: document.getElementById('reviewQueueList'),
+      cookBookScrollArea: document.getElementById('cookBookScrollArea'),
+      bottomConsole: document.getElementById('bottomConsole')
+    };
+
+    let pendingApprovals = [];
+    let cachedGlobalVegMeals = null;
+
+    function getMealTag(name) {
+      const low = String(name || '').toLowerCase();
+      const nonVegKeys = ['chicken','fish','mutton','meat','prawn','beef','pork','bacon','ham','steak','tuna','salmon','lamb','seafood'];
+      const eggKeys = ['egg', 'omelette', 'omelet', 'frittata', 'shakshuka', 'scramble', 'mayonnaise', 'quiche'];
+      if (nonVegKeys.some(k => low.includes(k))) return { text: 'Non-Veg', cls: 'tag-nonveg' };
+      if (eggKeys.some(k => low.includes(k))) return { text: 'Egg', cls: 'tag-egg' };
+      return { text: 'Veg', cls: 'tag-veg' };
+    }
+
+    async function fetchSurpriseMealFromInternet() {
+      try {
+        if (!cachedGlobalVegMeals) {
+          const vegRes = await fetch('https://www.themealdb.com/api/json/v1/1/filter.php?c=Vegetarian');
+          const vegData = await vegRes.json();
+          let meals = vegData.meals ? vegData.meals.map(m => m.strMeal) : [];
+          if (meals.length > 0) cachedGlobalVegMeals = meals.filter(name => getMealTag(name).text !== 'Non-Veg');
+        }
+        if (cachedGlobalVegMeals && cachedGlobalVegMeals.length > 0) return cachedGlobalVegMeals[Math.floor(Math.random() * cachedGlobalVegMeals.length)];
+        return "Classic Omelette"; 
+      } catch { return "Classic Omelette"; }
+    }
+
+    function switchTab(tabId, btn) {
+      if(navigator.vibrate) navigator.vibrate(15);
+      document.querySelectorAll('.page, .nav-item').forEach(el => el.classList.remove('active'));
+      document.getElementById(`page-${tabId}`).classList.add('active');
+      btn.classList.add('active');
+      els.bottomConsole.style.display = tabId === 'plan' ? 'flex' : 'none';
+      if(tabId === 'cart') renderCart();
+    }
+
+    let lastScrollY = window.scrollY;
+    window.addEventListener('scroll', () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 50) els.bottomConsole.classList.add('hidden');
+      else if (currentScrollY < lastScrollY) els.bottomConsole.classList.remove('hidden');
+      lastScrollY = currentScrollY;
+    }, { passive: true });
+
+    function renderReviewQueue() {
+      els.reviewQueueList.innerHTML = '';
+      if (pendingApprovals.length === 0) { els.reviewQueuePanel.style.display = 'none'; return; }
+      els.reviewQueuePanel.style.display = 'block';
+      pendingApprovals.forEach((item, idx) => {
+        const li = document.createElement('li');
+        li.className = 'review-queue-item';
+        li.innerHTML = `
+          <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; flex-grow:1;">
+            <select class="queue-category-select" data-queue-index="${idx}">
+              <option value="breakfast" ${item.category === 'breakfast' ? 'selected' : ''}>Breakfast</option>
+              <option value="lunch" ${item.category === 'lunch' ? 'selected' : ''}>Lunch</option>
+              <option value="dinner" ${item.category === 'dinner' ? 'selected' : ''}>Dinner</option>
+            </select>
+            <span style="font-weight:600; font-family:var(--font-display); font-size:1.25rem;">${escapeHtml(item.meal)}</span>
+          </div>
+          <button class="review-queue-remove" data-remove-queue="${idx}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        `;
+        els.reviewQueueList.appendChild(li);
+      });
+    }
+
+    document.addEventListener('change', e => { if (e.target.classList.contains('queue-category-select')) pendingApprovals[Number(e.target.dataset.queueIndex)].category = e.target.value; });
+    document.addEventListener('click', e => { const rmBtn = e.target.closest('[data-remove-queue]'); if (rmBtn) { pendingApprovals.splice(Number(rmBtn.dataset.removeQueue), 1); renderReviewQueue(); renderOutputDeck(state.currentSuggestions); } });
+
+    async function submitQueueForApproval() {
+      if (pendingApprovals.length === 0) return;
+      const btn = document.getElementById('submitApprovalBtn');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `Syncing...`;
+      try {
+        const url = new URL(GOOGLE_SHEETS_API_URL);
+        url.searchParams.append('action', 'sync_meals');
+        url.searchParams.append('data', JSON.stringify(pendingApprovals));
+        const response = await fetch(url.toString());
+        const result = await response.json();
+        if (result.success) {
+            pendingApprovals.forEach(item => state.db[item.category].push(item.meal));
+            dedupeDb(); refreshCounts(); renderSpreadsheetModal();
+            pendingApprovals = []; renderReviewQueue(); renderOutputDeck(state.currentSuggestions); 
+            btn.innerHTML = "✓ Synced"; setTimeout(() => btn.innerHTML = originalText, 2000);
+        } else throw new Error();
+      } catch (err) { btn.innerHTML = originalText; alert('Sync failed.'); }
+    }
+
+    function dedupeDb() { for (const key of ['breakfast','lunch','dinner']) state.db[key] = [...new Set(state.db[key].map(v => String(v || '').trim()).filter(Boolean))]; }
+    function refreshCounts() { els.counts.breakfast.textContent = state.db.breakfast.length; els.counts.lunch.textContent = state.db.lunch.length; els.counts.dinner.textContent = state.db.dinner.length; }
+    function cookedWithinAWeek(mealName) { const now = Date.now(); return state.cookingHistory.find(e => e.name.toLowerCase() === mealName.toLowerCase() && now - e.timestamp < 7 * 24 * 60 * 60 * 1000); }
+    function getCandidatePool(categoryArr) { return categoryArr.length ? categoryArr : ['No meals added']; }
+    function pickUniqueMeal(categoryArr, excludedNames = []) {
+      const pool = getCandidatePool(categoryArr);
+      const excluded = new Set(excludedNames.map(v => v.toLowerCase()));
+      const uniquePool = pool.filter(m => !excluded.has(m.toLowerCase()));
+      const source = uniquePool.length ? uniquePool : pool;
+      return source[Math.floor(Math.random() * source.length)];
+    }
+    function buildCard(time, name, source, extra = {}) { return { time, name, source, isLocked: !!extra.isLocked, cookedRecently: !!cookedWithinAWeek(name), history: extra.history || [name], historyIndex: extra.historyIndex || 0 }; }
+    function logSingleMealSelection(mealName, timeOfDay) { if (!mealName || mealName === 'No meals added') return; state.cookingHistory.push({ time: timeOfDay, name: mealName, timestamp: Date.now() }); if (state.cookingHistory.length > 120) state.cookingHistory.shift(); }
+
+    function renderOutputDeck(schema) {
+      state.currentSuggestions = structuredClone(schema);
+      els.suggestions.innerHTML = '';
+      if (!schema.length) { els.suggestions.innerHTML = `<div class="empty"><h3>Ready to Plan?</h3><p class="subtle">Generate balanced meal options, search nutrition quickly, and find ingredient-based fallbacks online.</p></div>`; return; }
+      schema.forEach((item, index) => {
+        const tag = getMealTag(item.name);
+        const article = document.createElement('article');
+        article.className = 'meal-card' + (item.isLocked ? ' locked' : '');
+        article.style.animationDelay = `${index * 0.1}s`;
         
-        <div id="page-discover" class="page active">
-            <h1 style="margin-bottom: 24px;">Discover</h1>
-            <input type="text" class="search-bar" placeholder="🔍 Search recipes, cuisines...">
-            
-            <div class="section-title">Chef Specials</div>
-            <div class="horizontal-scroll" id="chef-specials-list"></div>
-
-            <div class="section-title">All Recipes</div>
-            <div id="all-recipes-list"></div>
-        </div>
-
-        <div id="page-planner" class="page">
-            <h1 style="margin-bottom: 24px;">Weekly Calendar</h1>
-            <div id="weekly-calendar"></div>
-        </div>
-
-        <div id="page-cart" class="page">
-            <h1 style="margin-bottom: 12px;">Grocery Cart</h1>
-            <p style="color: var(--text-muted); margin-bottom: 24px;">Tap amounts to edit units.</p>
-            
-            <div class="section-title">Ready to Buy</div>
-            <div id="active-items"></div>
-
-            <div class="section-title">Recently Bought</div>
-            <div id="dimmed-items"></div>
-
-            <button class="swiggy-btn" onclick="startGuidedShopping()">🛒 Start Guided Shopping</button>
-            <div id="sync-status">Status: Connecting to Database...</div>
-        </div>
-
-    </div>
-
-    <div class="bottom-nav">
-        <button class="nav-item active" id="nav-discover" onclick="switchTab('discover')">💡 Discover</button>
-        <button class="nav-item" id="nav-planner" onclick="switchTab('planner')">📅 Plan</button>
-        <button class="nav-item" id="nav-cart" onclick="switchTab('cart')">🛒 Cart</button>
-    </div>
-
-    <script>
-        const GOOGLE_WEB_APP_URL = "YOUR_GOOGLE_SCRIPT_URL_HERE";
-
-        const UNIT_TYPES = {
-            "Milk": ["500 ml", "1 L", "2 L"],
-            "Curd": ["200 g", "500 g", "1 kg"],
-            "Potatoes": ["500 g", "1 kg", "2 kg", "5 kg", "10 kg"],
-            "Capsicum": ["250 g", "500 g", "1 kg"],
-            "Flour": ["1 kg", "2 kg", "5 kg", "10 kg"],
-            "Eggs": ["6 Pack", "12 Pack", "30 Pack"],
-            "default": ["1", "2", "3", "4", "5"]
-        };
-
-        let DB = {
-            recipesMaster: [],
-            plannedMeals: {},
-            orderHistory: [],
-            cart: []
-        };
-
-        async function initApp() { 
-            await fetchDatabaseSync();
-            renderDiscover(); 
-            renderPlanner(); 
-            renderCart(); 
+        let bookmarkHTML = '';
+        if (item.source !== 'db') {
+           const category = item.time.replace(/^[^a-zA-Z]+/, '').trim().split(' ')[0].toLowerCase();
+           const normalized = normalizeSuggestionToMealName(item.name);
+           const isQueued = pendingApprovals.some(m => m.category === category && m.meal.toLowerCase() === normalized.toLowerCase());
+           bookmarkHTML = isQueued 
+            ? `<button class="bookmark-btn added" type="button" data-action="toggle-queue" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg></button>`
+            : `<button class="bookmark-btn" type="button" data-action="toggle-queue" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg></button>`;
         }
 
-        async function fetchDatabaseSync() {
-            try {
-                document.getElementById('sync-status').innerText = "Status: Syncing with Google Sheets...";
-                if(GOOGLE_WEB_APP_URL !== "YOUR_GOOGLE_SCRIPT_URL_HERE") {
-                    const response = await fetch(`${GOOGLE_WEB_APP_URL}?action=getAllData`);
-                    const data = await response.json();
-                    DB = data; 
-                } else {
-                    DB = {
-                        recipesMaster: [
-                            { id: "r1", name: "Aloo Shimla Mirch", tags: "Dry Veg", isChefSpecial: true, ingredients: [{name: "Potatoes", defaultQty: "1 kg"}, {name: "Capsicum", defaultQty: "500 g"}, {name: "Curd", defaultQty: "500 g"}] },
-                            { id: "r2", name: "Paneer Do Pyaza", tags: "Gravy", isChefSpecial: false, ingredients: [{name: "Paneer", defaultQty: "500 g"}, {name: "Onions", defaultQty: "1 kg"}] }
-                        ],
-                        plannedMeals: { "Tuesday": ["Aloo Shimla Mirch"], "Thursday": ["Paneer Do Pyaza"] },
-                        orderHistory: [{ item: "Curd", date: "2 days ago" }],
-                        cart: []
-                    };
-                }
-                document.getElementById('sync-status').innerText = "Status: Synced Successfully";
-            } catch (error) {
-                document.getElementById('sync-status').innerText = "Status: Offline (Using Local Cache)";
-                console.error("Database sync failed", error);
-            }
+        article.innerHTML = `
+          <div class="meal-main">
+            <div class="card-header-row">
+              <div class="card-header-left"><span class="eyebrow">${item.time}</span><div style="display:flex; gap:8px;"><span class="badge ${tag.cls}">${tag.text}</span>${item.cookedRecently ? '<span class="badge warning">Cooked recently</span>' : ''}</div></div>
+              <div class="card-header-right" style="display:flex; gap:8px;">
+                 <button class="bookmark-btn" type="button" data-action="add-to-cart" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg></button>
+                 ${bookmarkHTML}
+              </div>
+            </div>
+            <div class="meal-title">${escapeHtml(item.name)}</div>
+            <div class="nav-buttons-row">
+              <button class="card-action" style="padding:1rem;" type="button" data-action="prev" data-index="${index}" ${item.historyIndex > 0 && !item.isLocked ? '' : 'disabled'}>Prev</button>
+              <button class="card-action" style="padding:1rem;" type="button" data-action="next" data-index="${index}" ${item.isLocked ? 'disabled' : ''}>Next</button>
+            </div>
+          </div>
+          <div class="main-actions-row">
+            <button class="card-action ${item.isLocked ? 'locked' : ''}" style="border-width: 2px;" type="button" data-action="lock" data-index="${index}">${item.isLocked ? '✓ Selected' : 'Order Up!'}</button>
+            <button class="card-action" type="button" data-action="toggle-explore" data-index="${index}">Explore</button>
+          </div>
+          <div id="explore-${index}" class="explore-area">
+            <button class="card-action" data-action="google" data-index="${index}">Google</button>
+            <button class="card-action" data-action="youtube" data-index="${index}">YouTube</button>
+            <button class="card-action" style="color:var(--color-success);" data-action="nutrition" data-index="${index}">Health</button>
+          </div>
+        `;
+        els.suggestions.appendChild(article);
+      });
+    }
+
+    function generateDefaultSuggestions() {
+      const used = [];
+      const b = pickUniqueMeal(state.db.breakfast, used); used.push(b);
+      const l = pickUniqueMeal(state.db.lunch, used); used.push(l);
+      const d = pickUniqueMeal(state.db.dinner, used);
+      renderOutputDeck([ buildCard('Breakfast', b, 'db'), buildCard('Lunch', l, 'db'), buildCard('Dinner', d, 'db') ]);
+    }
+
+    async function refreshSpecificCategoryCard(index, direction = 'next') {
+      const card = state.currentSuggestions[index];
+      if (!card || card.isLocked) return;
+      if (direction === 'next' && card.source === 'internet') {
+        const newMealName = await fetchSurpriseMealFromInternet();
+        card.history.push(newMealName); card.historyIndex++; card.name = newMealName; card.cookedRecently = !!cookedWithinAWeek(newMealName);
+        renderOutputDeck(state.currentSuggestions); return;
+      }
+      if (direction === 'prev') {
+        if (card.historyIndex > 0) { card.historyIndex--; card.name = card.history[card.historyIndex]; card.cookedRecently = !!cookedWithinAWeek(card.name); renderOutputDeck(state.currentSuggestions); }
+        return;
+      }
+      if (card.historyIndex < card.history.length - 1) {
+        card.historyIndex++; card.name = card.history[card.historyIndex]; card.cookedRecently = !!cookedWithinAWeek(card.name); renderOutputDeck(state.currentSuggestions); return;
+      }
+      const cleanKey = card.time.replace(/^[^a-zA-Z]+/, '').trim().split(' ')[0].toLowerCase();
+      const used = state.currentSuggestions.filter((_, i) => i !== index).map(i => i.name);
+      let newMealName = pickUniqueMeal(state.db[cleanKey], used);
+      card.history.push(newMealName); card.historyIndex++; card.name = newMealName; card.cookedRecently = !!cookedWithinAWeek(newMealName);
+      renderOutputDeck(state.currentSuggestions);
+    }
+
+    function lockChoiceIntoExclusionMemory(index) {
+      const card = state.currentSuggestions[index];
+      if (!card) return;
+      card.isLocked = !card.isLocked;
+      if (card.isLocked) logSingleMealSelection(card.name, card.time.split(' ')[0]);
+      renderOutputDeck(state.currentSuggestions);
+    }
+
+    function normalizeSuggestionToMealName(name) { return String(name).replace(/^Try:\s*/i, '').replace(/^Internet search:\s*/i, '').trim(); }
+
+    function renderSpreadsheetModal() {
+      refreshCounts();
+      els.tableSections.innerHTML = '';
+      ['breakfast','lunch','dinner'].forEach(category => {
+        const section = document.createElement('section'); section.className = 'panel data-section'; section.setAttribute('data-section', category);
+        const title = document.createElement('h5'); title.textContent = `${category.toUpperCase()} · ${state.db[category].length}`; section.appendChild(title);
+        if (!state.db[category].length) section.innerHTML += `<p class="subtle">No meals found.</p>`;
+        else state.db[category].forEach((item) => section.innerHTML += `<div class="data-row"><span>${escapeHtml(item)}</span></div>`);
+        els.tableSections.appendChild(section);
+      });
+    }
+
+    function openModal(modal) { modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); }
+    function closeModal(modal) { modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
+
+    // --- GROCERY & CART LOGIC ---
+    const UNIT_TYPES = {
+      "Milk": ["500 ml", "1 L", "2 L"], "Curd": ["200 g", "500 g", "1 kg"], "Potatoes": ["500 g", "1 kg", "2 kg"],
+      "Capsicum": ["250 g", "500 g", "1 kg"], "Flour": ["1 kg", "2 kg", "5 kg"], "Eggs": ["6 Pack", "12 Pack", "30 Pack"],
+      "default": ["1", "2", "3", "4", "5"]
+    };
+
+    const AI_MAP = { "Bread": "Butter", "Milk": "Coffee", "Eggs": "Bread", "Potatoes": "Onions", "Capsicum": "Paneer" };
+
+    function breakdownRecipeToCart(mealName) {
+      if(navigator.vibrate) navigator.vibrate(15);
+      const ingredients = [`${mealName} Base`, "Onions", "Tomatoes"]; 
+      ingredients.forEach(ing => {
+        const isRecent = state.orderHistory.some(h => h.item === ing);
+        if(!state.cart.some(c => c.name === ing)) {
+          state.cart.push({ name: ing, quantity: "1", checked: !isRecent, recent: isRecent, flag: isRecent ? "Ordered in last 7 days" : "" });
         }
+      });
+      syncCartToBackend();
+      switchTab('cart', document.querySelectorAll('.nav-item')[1]);
+    }
 
-        function triggerHaptic() { if (navigator.vibrate) navigator.vibrate(15); }
+    function openMasterList() {
+      if(navigator.vibrate) navigator.vibrate(15);
+      const now = new Date();
+      const recentNames = state.orderHistory.filter(h => (now - new Date(h.date)) < 7*24*60*60*1000).map(h => h.item);
+      
+      const lastBought = []; const mostlyBought = []; const theRest = [];
+      state.masterGrocery.forEach(item => {
+        if(recentNames.includes(item.name)) lastBought.push(item);
+        else if(item.freq > 20) mostlyBought.push(item);
+        else theRest.push(item);
+      });
 
-        function switchTab(tabId) {
-            triggerHaptic();
-            document.querySelectorAll('.page, .nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`page-${tabId}`).classList.add('active');
-            document.getElementById(`nav-${tabId}`).classList.add('active');
-        }
+      const renderList = (arr, isRecent) => arr.map(item => {
+        const inCart = state.cart.some(c => c.name === item.name);
+        return `<div class="grocery-item ${inCart ? 'checked' : ''} ${isRecent && !inCart ? 'dimmed' : ''}" onclick="toggleMasterItem('${item.name}', ${isRecent})">
+          <div class="checkbox">${inCart ? '✓' : ''}</div>
+          <div class="item-name">${item.name}</div>
+        </div>`;
+      }).join('');
 
-        function renderDiscover() {
-            document.getElementById('chef-specials-list').innerHTML = DB.recipesMaster.filter(r => r.isChefSpecial).map(r => `
-                <div class="recipe-card">
-                    <div class="chef-badge">Chef Special</div>
-                    <h2 style="font-size: 18px; margin-bottom: 8px;">${r.name}</h2>
-                    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">${r.tags}</p>
-                    <button class="smart-cart-btn" style="width: 100%; border-radius: 12px;" onclick="breakdownRecipe('${r.id}')">Add to Cart</button>
-                </div>
-            `).join('');
+      document.getElementById('ml-last-bought').innerHTML = renderList(lastBought, true) || '<p class="subtle">None</p>';
+      document.getElementById('ml-mostly-bought').innerHTML = renderList(mostlyBought.sort((a,b)=>b.freq-a.freq), false) || '<p class="subtle">None</p>';
+      document.getElementById('ml-the-rest').innerHTML = renderList(theRest.sort((a,b)=>a.name.localeCompare(b.name)), false) || '<p class="subtle">None</p>';
+      
+      openModal(document.getElementById('masterListModal'));
+    }
 
-            document.getElementById('all-recipes-list').innerHTML = DB.recipesMaster.map(r => `
-                <div class="meal-card">
-                    <div class="meal-info"><h2>${r.name}</h2><p>${r.tags}</p></div>
-                    <button class="smart-cart-btn" onclick="breakdownRecipe('${r.id}')">🛒</button>
-                </div>
-            `).join('');
-        }
+    function toggleMasterItem(name, isRecent) {
+      if(navigator.vibrate) navigator.vibrate(15);
+      const idx = state.cart.findIndex(c => c.name === name);
+      if(idx > -1) state.cart.splice(idx, 1);
+      else state.cart.push({ name, quantity: "1", checked: true, recent: isRecent, flag: isRecent ? "Ordered in last 7 days" : "" });
+      openMasterList(); renderCart(); syncCartToBackend();
+    }
 
-        function renderPlanner() {
-            let plannerHtml = '';
-            for (const [day, meals] of Object.entries(DB.plannedMeals)) {
-                plannerHtml += `<div class="day-group"><div class="day-title">${day}</div>`;
-                if (!meals || meals.length === 0) plannerHtml += `<p style="color: var(--text-muted); font-size: 14px; margin-left: 8px;">No meals planned.</p>`;
-                else {
-                    meals.forEach(mealName => {
-                        const recipe = DB.recipesMaster.find(r => r.name === mealName);
-                        plannerHtml += `
-                            <div class="meal-card">
-                                <div class="meal-info"><h2>${mealName}</h2><p>Dinner</p></div>
-                                <button class="smart-cart-btn" onclick="breakdownRecipe('${recipe.id}')">🛒</button>
-                            </div>
-                        `;
-                    });
-                }
-                plannerHtml += `</div>`;
-            }
-            document.getElementById('weekly-calendar').innerHTML = plannerHtml || '<p style="color: var(--text-muted);">No data found.</p>';
-        }
+    function renderCart() {
+      let activeHtml = '', dimmedHtml = '';
+      const selectedNames = [];
 
-        function breakdownRecipe(recipeId) {
-            triggerHaptic();
-            const recipe = DB.recipesMaster.find(r => r.id === recipeId);
-            
-            recipe.ingredients.forEach(ing => {
-                const recentOrder = DB.orderHistory.find(h => h.item === ing.name);
-                const exists = DB.cart.find(c => c.name === ing.name);
-                if(!exists) {
-                    DB.cart.push({ 
-                        name: ing.name, quantity: ing.defaultQty, 
-                        checked: !recentOrder, recent: !!recentOrder, 
-                        flag: recentOrder ? "Ordered in last 7 days" : "" 
-                    });
-                }
-            });
-            renderCart();
-            switchTab('cart');
-            syncCartToBackend();
-        }
+      state.cart.forEach((item, index) => {
+        if(item.checked) selectedNames.push(item.name);
+        const html = `
+          <div class="grocery-item ${item.checked ? 'checked' : ''} ${item.recent && !item.checked ? 'dimmed' : ''}" onclick="toggleCartItem(${index})">
+              <div class="checkbox">${item.checked ? '✓' : ''}</div>
+              <div class="item-details">
+                  <div class="item-text-group"><div class="item-name">${item.name}</div>${item.flag ? `<div class="item-flag">🕒 ${item.flag}</div>` : ''}</div>
+                  <div class="qty-badge" onclick="openPicker(event, ${index})">${item.quantity} ▾</div>
+              </div>
+          </div>`;
+        if (item.recent && !item.checked) dimmedHtml += html; else activeHtml += html;
+      });
 
-        function toggleItem(index) {
-            triggerHaptic();
-            DB.cart[index].checked = !DB.cart[index].checked;
-            renderCart();
-            syncCartToBackend();
-        }
+      document.getElementById('active-items').innerHTML = activeHtml || '<p class="subtle">No active items.</p>';
+      document.getElementById('dimmed-items').innerHTML = dimmedHtml || '<p class="subtle">No recently bought items.</p>';
 
-        let currentEditIndex = null;
-        function openPicker(event, index) {
-            event.stopPropagation();
-            triggerHaptic();
-            currentEditIndex = index;
-            const item = DB.cart[index];
-            const options = UNIT_TYPES[item.name] || UNIT_TYPES["default"];
-            
-            document.getElementById('picker-title').innerText = item.name;
-            document.getElementById('picker-grid').innerHTML = options.map(opt => 
-                `<button class="unit-btn" onclick="selectQuantity('${opt}')">${opt}</button>`
-            ).join('');
-            
-            document.getElementById('picker-overlay').classList.add('active');
-            document.getElementById('bottom-sheet').classList.add('active');
-        }
+      const aiStrip = document.getElementById('ai-recommendations');
+      const aiContent = document.getElementById('ai-scroll-content');
+      let recos = new Set();
+      selectedNames.forEach(n => { if(AI_MAP[n]) recos.add(AI_MAP[n]); });
+      const finalRecos = [...recos].filter(r => !state.cart.some(c => c.name === r));
+      
+      if(finalRecos.length > 0) {
+        aiContent.innerHTML = finalRecos.map(r => `<div class="ai-pill" onclick="toggleMasterItem('${r}', false)">+ ${r}</div>`).join('');
+        aiStrip.style.display = 'block';
+      } else { aiStrip.style.display = 'none'; }
+    }
 
-        function selectQuantity(qty) {
-            triggerHaptic();
-            DB.cart[currentEditIndex].quantity = qty;
-            closePicker();
-            renderCart();
-            syncCartToBackend();
-        }
+    function toggleCartItem(index) {
+      if(navigator.vibrate) navigator.vibrate(15);
+      state.cart[index].checked = !state.cart[index].checked;
+      renderCart(); syncCartToBackend();
+    }
 
-        function closePicker() {
-            document.getElementById('picker-overlay').classList.remove('active');
-            document.getElementById('bottom-sheet').classList.remove('active');
-        }
+    let currentEditIndex = null;
+    function openPicker(event, index) {
+      event.stopPropagation(); if(navigator.vibrate) navigator.vibrate(15);
+      currentEditIndex = index; const item = state.cart[index];
+      const opts = UNIT_TYPES[item.name] || UNIT_TYPES["default"];
+      document.getElementById('picker-title').innerText = item.name;
+      document.getElementById('picker-grid').innerHTML = opts.map(o => `<button class="unit-btn" onclick="selectQuantity('${o}')">${o}</button>`).join('');
+      document.getElementById('picker-overlay').classList.add('open');
+      document.getElementById('bottom-sheet').classList.add('active');
+    }
+    function selectQuantity(qty) {
+      if(navigator.vibrate) navigator.vibrate(15);
+      state.cart[currentEditIndex].quantity = qty;
+      closePicker(); renderCart(); syncCartToBackend();
+    }
+    function closePicker() { document.getElementById('picker-overlay').classList.remove('open'); document.getElementById('bottom-sheet').classList.remove('active'); }
 
-        function renderCart() {
-            let activeHtml = '', dimmedHtml = '';
+    let shoppingQueue = []; let shoppingIndex = 0;
+    function startGuidedShopping() {
+      if(navigator.vibrate) navigator.vibrate(15);
+      shoppingQueue = state.cart.filter(i => i.checked);
+      if(shoppingQueue.length === 0) return alert("Check at least one item.");
+      shoppingIndex = 0; updateGuidedUI(); document.getElementById('guided-overlay').classList.add('active');
+      setTimeout(() => window.location.href = `swiggy://instamart/search?query=${encodeURIComponent(shoppingQueue[0].name)}`, 300);
+    }
+    function updateGuidedUI() {
+      const item = shoppingQueue[shoppingIndex];
+      document.getElementById('shopping-progress').innerText = `Item ${shoppingIndex + 1} of ${shoppingQueue.length}`;
+      document.getElementById('shopping-item-name').innerText = `${item.quantity} ${item.name}`;
+    }
+    function markDoneAndNext() {
+      if(navigator.vibrate) navigator.vibrate(15);
+      const current = shoppingQueue[shoppingIndex];
+      const dbIdx = state.cart.findIndex(c => c.name === current.name);
+      if(dbIdx > -1) { state.cart[dbIdx].checked = false; state.cart[dbIdx].recent = true; state.cart[dbIdx].flag = "Just Bought"; }
+      
+      // Update history
+      fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateHistory', items: [current.name] }) }).catch(e=>e);
+      
+      shoppingIndex++;
+      if(shoppingIndex >= shoppingQueue.length) { closeGuidedShopping(); syncCartToBackend(); }
+      else { updateGuidedUI(); setTimeout(() => window.location.href = `swiggy://instamart/search?query=${encodeURIComponent(shoppingQueue[shoppingIndex].name)}`, 300); }
+    }
+    function closeGuidedShopping() { if(navigator.vibrate) navigator.vibrate(15); document.getElementById('guided-overlay').classList.remove('active'); renderCart(); }
 
-            DB.cart.forEach((item, index) => {
-                const checkedClass = item.checked ? 'checked' : '';
-                const dimClass = item.recent && !item.checked ? 'dimmed' : '';
-                const checkMark = item.checked ? '✓' : '';
-                const flagHtml = item.flag ? `<div class="item-flag">🕒 ${item.flag}</div>` : '';
+    async function syncCartToBackend() {
+      if(!GOOGLE_SHEETS_API_URL || GOOGLE_SHEETS_API_URL.includes("PASTE")) return;
+      try { await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'syncCart', cart: state.cart }) }); } catch(e) {}
+    }
 
-                const html = `
-                    <div class="grocery-item ${checkedClass} ${dimClass}" onclick="toggleItem(${index})">
-                        <div class="checkbox">${checkMark}</div>
-                        <div class="item-details">
-                            <div class="item-text-group"><div class="item-name">${item.name}</div>${flagHtml}</div>
-                            <div class="qty-badge" onclick="openPicker(event, ${index})">${item.quantity} ▾</div>
-                        </div>
-                    </div>
-                `;
-                if (item.recent && !item.checked) dimmedHtml += html;
-                else activeHtml += html;
-            });
+    // --- EVENT LISTENERS ---
+    document.getElementById('generateBtn').addEventListener('click', generateDefaultSuggestions);
+    document.getElementById('submitApprovalBtn').addEventListener('click', submitQueueForApproval);
+    document.getElementById('surpriseBtn').addEventListener('click', async function() {
+      els.suggestions.innerHTML = '<div class="empty"><h3>Fetching inspirations...</h3></div>';
+      const [b, l, d] = await Promise.all([ fetchSurpriseMealFromInternet(), fetchSurpriseMealFromInternet(), fetchSurpriseMealFromInternet() ]);
+      renderOutputDeck([ buildCard("Breakfast", b, 'internet'), buildCard("Lunch", l, 'internet'), buildCard("Dinner", d, 'internet') ]);
+    });
+    document.getElementById('fridgeBtn').addEventListener('click', () => openModal(els.fridgeModal));
+    document.getElementById('openDataBtn').addEventListener('click', () => { openModal(els.dataModal); renderSpreadsheetModal(); });
+    document.getElementById('closeDataBtn').addEventListener('click', () => closeModal(els.dataModal));
+    document.getElementById('closeFridgeBtn').addEventListener('click', () => closeModal(els.fridgeModal));
+    
+    els.suggestions.addEventListener('click', async event => {
+      const btn = event.target.closest('[data-action]'); if (!btn) return;
+      const idx = Number(btn.dataset.index);
+      const action = btn.dataset.action;
+      if (action === 'prev') await refreshSpecificCategoryCard(idx, 'prev');
+      if (action === 'next') await refreshSpecificCategoryCard(idx, 'next');
+      if (action === 'toggle-explore') document.getElementById(`explore-${idx}`).classList.toggle('open');
+      if (action === 'lock') lockChoiceIntoExclusionMemory(idx);
+      if (action === 'google') window.open(`https://www.google.com/search?q=${encodeURIComponent(state.currentSuggestions[idx].name + ' recipe')}`, '_blank');
+      if (action === 'youtube') window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(state.currentSuggestions[idx].name + ' recipe')}`, '_blank');
+      if (action === 'nutrition') window.open(`https://www.google.com/search?q=${encodeURIComponent(state.currentSuggestions[idx].name + ' nutrition')}`, '_blank');
+      if (action === 'add-to-cart') breakdownRecipeToCart(state.currentSuggestions[idx].name);
+    });
 
-            document.getElementById('active-items').innerHTML = activeHtml || '<p style="color:var(--text-muted)">No active items.</p>';
-            document.getElementById('dimmed-items').innerHTML = dimmedHtml || '<p style="color:var(--text-muted)">No recently bought items.</p>';
-        }
-
-        let shoppingQueue = [];
-        let shoppingIndex = 0;
-
-        function startGuidedShopping() {
-            triggerHaptic();
-            shoppingQueue = DB.cart.filter(item => item.checked);
-            if(shoppingQueue.length === 0) return alert("Check at least one item.");
-            
-            shoppingIndex = 0;
-            updateGuidedUI();
-            document.getElementById('guided-overlay').classList.add('active');
-
-            const firstItem = shoppingQueue[0];
-            const searchQuery = encodeURIComponent(firstItem.name);
-            setTimeout(() => {
-                window.location.href = `swiggy://instamart/search?query=${searchQuery}`;
-            }, 300);
-        }
-
-        function updateGuidedUI() {
-            const item = shoppingQueue[shoppingIndex];
-            document.getElementById('shopping-progress').innerText = `Item ${shoppingIndex + 1} of ${shoppingQueue.length}`;
-            document.getElementById('shopping-item-name').innerText = `${item.quantity} ${item.name}`;
-        }
-
-        function markDoneAndNext() {
-            triggerHaptic();
-            
-            const currentItem = shoppingQueue[shoppingIndex];
-            const dbIndex = DB.cart.findIndex(c => c.name === currentItem.name);
-            
-            if(dbIndex !== -1) {
-                DB.cart[dbIndex].checked = false;
-                DB.cart[dbIndex].recent = true;
-                DB.cart[dbIndex].flag = "Just Bought";
-            }
-
-            shoppingIndex++;
-            
-            if(shoppingIndex >= shoppingQueue.length) {
-                closeGuidedShopping();
-                syncCartToBackend();
-            } else {
-                updateGuidedUI();
-                const nextItem = shoppingQueue[shoppingIndex];
-                const searchQuery = encodeURIComponent(nextItem.name);
-                setTimeout(() => {
-                    window.location.href = `swiggy://instamart/search?query=${searchQuery}`;
-                }, 300);
-            }
-        }
-
-        function closeGuidedShopping() {
-            triggerHaptic();
-            document.getElementById('guided-overlay').classList.remove('active');
-            renderCart();
-        }
-
-        async function syncCartToBackend() {
-            if(GOOGLE_WEB_APP_URL === "YOUR_GOOGLE_SCRIPT_URL_HERE") return;
-            try {
-                await fetch(GOOGLE_WEB_APP_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'syncCart', cart: DB.cart })
-                });
-            } catch(e) {
-                console.error("Background sync failed", e);
-            }
-        }
-
-        window.onload = initApp;
-    </script>
+    async function loadFromGoogleSheets() {
+      if (!GOOGLE_SHEETS_API_URL || GOOGLE_SHEETS_API_URL.includes("PASTE")) { dedupeDb(); refreshCounts(); renderOutputDeck([]); renderSpreadsheetModal(); return; }
+      try {
+        const res = await fetch(`${GOOGLE_SHEETS_API_URL}?action=getAllData`);
+        const data = await res.json();
+        if (data.breakfast) state.db.breakfast = data.breakfast;
+        if (data.lunch) state.db.lunch = data.lunch;
+        if (data.dinner) state.db.dinner = data.dinner;
+        if (data.masterGrocery) state.masterGrocery = data.masterGrocery;
+        if (data.orderHistory) state.orderHistory = data.orderHistory;
+        if (data.cart) state.cart = data.cart;
+        
+        dedupeDb(); refreshCounts(); renderSpreadsheetModal();
+        els.suggestions.innerHTML = `<div class="empty"><h3>Ready to Plan?</h3><p class="subtle">Generate balanced meal options, search nutrition quickly, and find ingredient-based fallbacks online.</p></div>`;
+      } catch (e) {
+        dedupeDb(); refreshCounts(); renderSpreadsheetModal();
+        els.suggestions.innerHTML = '<div class="empty"><h3>Loaded offline database (Google Sheet sync failed).</h3></div>';
+      }
+    }
+    loadFromGoogleSheets();
+  </script>
 </body>
 </html>
