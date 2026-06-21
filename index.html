@@ -19,8 +19,7 @@
       --radius-btn: 2rem; --radius-xl: 1.5rem; --radius-2xl: 2rem;
       --shadow-sm: 0 4px 12px oklch(0.2 0.01 80 / 0.04); --shadow-md: 0 12px 32px oklch(0.2 0.01 80 / 0.08);
       --font-body: 'General Sans', Inter, sans-serif; --font-display: 'Boska', Georgia, serif;
-      --ease-android: cubic-bezier(0.2, 0, 0, 1);
-      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-android: cubic-bezier(0.2, 0, 0, 1); --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     
     [data-theme="dark"] {
@@ -139,7 +138,13 @@
     .nav-item { background: none; border: none; color: var(--color-text-muted); font-size: 15px; font-weight: 600; padding: 12px 20px; border-radius: 30px; cursor: pointer; transition: all 0.3s var(--ease-spring); display: flex; align-items: center; gap: 6px; }
     .nav-item.active { background: var(--color-primary); color: var(--color-bg); }
 
-    .grocery-item { background: var(--color-surface); border-radius: 1.5rem; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; border: 1px solid var(--color-border); }
+    /* SWIPE TO DELETE STYLES */
+    .swipe-wrapper { position: relative; overflow: hidden; margin-bottom: 12px; border-radius: 1.5rem; }
+    .swipe-bg { position: absolute; inset: 0; background: var(--color-error); border-radius: 1.5rem; display: flex; align-items: center; justify-content: flex-end; padding-right: 24px; color: #fff; font-weight: bold; }
+    .swipe-item { position: relative; z-index: 1; transition: transform 0.2s var(--ease-android); margin-bottom: 0; }
+    .swipe-item.swiping { transition: none; }
+
+    .grocery-item { background: var(--color-surface); border-radius: 1.5rem; padding: 16px; display: flex; align-items: center; border: 1px solid var(--color-border); }
     .grocery-item.dimmed { opacity: 0.5; background: transparent; }
     .checkbox { width: 24px; height: 24px; border: 2px solid var(--color-primary); border-radius: 8px; margin-right: 16px; display: flex; align-items: center; justify-content: center; color: transparent; transition: all 0.2s; }
     .grocery-item.checked .checkbox { background: var(--color-primary); color: var(--color-bg); }
@@ -241,6 +246,12 @@
         <button class="icon-btn" style="border-radius: 50%;" onclick="closeModal(document.getElementById('masterListModal'))">✕</button>
       </div>
       <div class="dialog-content-scroll" style="padding: 1rem;">
+        
+        <div style="display:flex; gap:8px; margin-bottom:24px;">
+           <input id="newMasterInput" class="input" style="padding: 12px;" placeholder="Add new item...">
+           <button class="primary-btn" style="border-radius:1.5rem; padding:0 20px;" onclick="addManualMasterItem()">Add</button>
+        </div>
+
         <h5 style="font-size:0.8rem; text-transform:uppercase; letter-spacing:.12em; color:var(--color-primary); margin:1rem 0;">Last Bought</h5>
         <div id="ml-last-bought"></div>
         <h5 style="font-size:0.8rem; text-transform:uppercase; letter-spacing:.12em; color:var(--color-secondary); margin:1rem 0;">Mostly Bought</h5>
@@ -315,6 +326,7 @@
   </div>
 
   <script>
+    // Scroll auto-hide for bottom nav
     let lastScrollY = window.scrollY;
     const bottomNav = document.getElementById('bottomNav');
     window.addEventListener('scroll', () => {
@@ -327,7 +339,7 @@
       lastScrollY = currentScrollY;
     }, { passive: true });
 
-    const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzEI8jaoYwaVrjVfcB9GXNO95rMxqSAC14R5BR6soG11uqCXhpAcMoq0wEy9cH3-vn9MQ/exec";
+    const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbwg-cIB832HCKF-sS8NagPis_MD15ImaiW4nys0lr7s-KyJLUhSKDRxPLn5Mn7Sv7tWOA/exec";
 
     (() => {
       const themeBtn = document.querySelector('[data-theme-toggle]');
@@ -371,6 +383,73 @@
 
     function escapeHtml(str) { 
       return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); 
+    }
+
+    // Swipe Globals
+    let touchStartX = 0;
+    let currentTranslate = 0;
+    let swipingId = null;
+    let swipingContext = null;
+
+    function handleSwipeStart(e, id, context) {
+      touchStartX = e.touches[0].clientX;
+      swipingId = id;
+      swipingContext = context;
+      const el = document.getElementById(`swipe-item-${id}`);
+      if (el) el.classList.add('swiping');
+    }
+
+    function handleSwipeMove(e, id) {
+      if (swipingId !== id) return;
+      const diff = e.touches[0].clientX - touchStartX;
+      if (diff < 0) { 
+        currentTranslate = diff;
+        const el = document.getElementById(`swipe-item-${id}`);
+        if (el) el.style.transform = `translateX(${currentTranslate}px)`;
+      }
+    }
+
+    function handleSwipeEnd(e, id, originalKey) {
+      if (swipingId !== id) return;
+      const el = document.getElementById(`swipe-item-${id}`);
+      swipingId = null;
+      if (el) {
+        el.classList.remove('swiping');
+        if (currentTranslate < -80) {
+          el.style.transform = `translateX(-100%)`;
+          setTimeout(() => {
+            if (swipingContext === 'cart') deleteCartItem(originalKey);
+            if (swipingContext === 'master') deleteMasterItem(originalKey);
+          }, 200);
+        } else {
+          el.style.transform = `translateX(0)`;
+        }
+      }
+      currentTranslate = 0;
+    }
+
+    function deleteCartItem(index) {
+      if(navigator.vibrate) navigator.vibrate(15);
+      state.cart.splice(index, 1);
+      renderCart();
+      syncCartToBackend();
+    }
+
+    function deleteMasterItem(name) {
+      if(navigator.vibrate) navigator.vibrate(15);
+      state.masterGrocery = state.masterGrocery.filter(i => i.name !== name);
+      openMasterList();
+      fetch(GOOGLE_SHEETS_API_URL, { method:'POST', body: JSON.stringify({action:'deleteMasterItem', item: name}) });
+    }
+
+    function addManualMasterItem() {
+      const val = document.getElementById('newMasterInput').value.trim();
+      if(val) {
+          state.masterGrocery.push({name: val, freq: 1});
+          document.getElementById('newMasterInput').value = '';
+          openMasterList();
+          fetch(GOOGLE_SHEETS_API_URL, { method:'POST', body: JSON.stringify({action:'addMasterItem', item: val}) });
+      }
     }
 
     function getMealTag(name) {
@@ -633,7 +712,6 @@
     }
     function closeModal(modal) { modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
 
-    // --- GROCERY & CART LOGIC ---
     const UNIT_TYPES = {
       "Milk": ["500 ml", "1 L", "2 L"], "Curd": ["200 g", "500 g", "1 kg"], "Potatoes": ["500 g", "1 kg", "2 kg"],
       "Capsicum": ["250 g", "500 g", "1 kg"], "Flour": ["1 kg", "2 kg", "5 kg"], "Eggs": ["6 Pack", "12 Pack", "30 Pack"],
@@ -653,7 +731,6 @@
           body: JSON.stringify({ action: 'breakdownRecipe', mealName: mealName })
         });
         const data = await res.json();
-        
         let ingredients = data.ingredients || [mealName];
         
         ingredients.forEach(ing => {
@@ -685,9 +762,16 @@
 
       const renderList = (arr, isRecent) => arr.map(item => {
         const inCart = state.cart.some(c => c.name.toLowerCase() === item.name.toLowerCase());
-        return `<div class="grocery-item ${inCart ? 'checked' : ''} ${isRecent && !inCart ? 'dimmed' : ''}" onclick="toggleMasterItem('${escapeHtml(item.name)}', ${isRecent})">
-          <div class="checkbox">${inCart ? '✓' : ''}</div>
-          <div class="item-name">${escapeHtml(item.name)}</div>
+        const safeId = item.name.replace(/[^a-zA-Z0-9]/g, '');
+        return `
+        <div class="swipe-wrapper" id="swipe-item-master-${safeId}" ontouchstart="handleSwipeStart(event, 'master-${safeId}', 'master')" ontouchmove="handleSwipeMove(event, 'master-${safeId}')" ontouchend="handleSwipeEnd(event, 'master-${safeId}', '${escapeHtml(item.name)}')">
+          <div class="swipe-bg">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          </div>
+          <div class="swipe-item grocery-item ${inCart ? 'checked' : ''} ${isRecent && !inCart ? 'dimmed' : ''}" onclick="toggleMasterItem('${escapeHtml(item.name)}', ${isRecent})">
+            <div class="checkbox">${inCart ? '✓' : ''}</div>
+            <div class="item-name">${escapeHtml(item.name)}</div>
+          </div>
         </div>`;
       }).join('');
 
@@ -713,11 +797,16 @@
       state.cart.forEach((item, index) => {
         if(item.checked) selectedNames.push(item.name.toLowerCase());
         const html = `
-          <div class="grocery-item ${item.checked ? 'checked' : ''} ${item.recent && !item.checked ? 'dimmed' : ''}" onclick="toggleCartItem(${index})">
-              <div class="checkbox">${item.checked ? '✓' : ''}</div>
-              <div class="item-details">
-                  <div class="item-text-group"><div class="item-name">${escapeHtml(item.name)}</div>${item.flag ? `<div class="item-flag">🕒 ${item.flag}</div>` : ''}</div>
-                  <div class="qty-badge" onclick="openPicker(event, ${index})">${item.quantity} ▾</div>
+          <div class="swipe-wrapper" id="swipe-item-cart-${index}" ontouchstart="handleSwipeStart(event, 'cart-${index}', 'cart')" ontouchmove="handleSwipeMove(event, 'cart-${index}')" ontouchend="handleSwipeEnd(event, 'cart-${index}', ${index})">
+              <div class="swipe-bg">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </div>
+              <div class="swipe-item grocery-item ${item.checked ? 'checked' : ''} ${item.recent && !item.checked ? 'dimmed' : ''}" onclick="toggleCartItem(${index})">
+                  <div class="checkbox">${item.checked ? '✓' : ''}</div>
+                  <div class="item-details">
+                      <div class="item-text-group"><div class="item-name">${escapeHtml(item.name)}</div>${item.flag ? `<div class="item-flag">🕒 ${item.flag}</div>` : ''}</div>
+                      <div class="qty-badge" onclick="openPicker(event, ${index})">${item.quantity} ▾</div>
+                  </div>
               </div>
           </div>`;
         if (item.recent && !item.checked) dimmedHtml += html; else activeHtml += html;
@@ -766,14 +855,21 @@
       if(navigator.vibrate) navigator.vibrate(15);
       shoppingQueue = state.cart.filter(i => i.checked);
       if(shoppingQueue.length === 0) return alert("Check at least one item.");
+      
+      // Update Master List
+      const itemsToAdd = shoppingQueue.map(i => i.name);
+      fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateMasterList', items: itemsToAdd }) }).catch(e=>e);
+
       shoppingIndex = 0; updateGuidedUI(); document.getElementById('guided-overlay').classList.add('active');
       setTimeout(() => window.location.href = `swiggy://instamart/search?query=${encodeURIComponent(shoppingQueue[0].name)}`, 300);
     }
+    
     function updateGuidedUI() {
       const item = shoppingQueue[shoppingIndex];
       document.getElementById('shopping-progress').innerText = `Item ${shoppingIndex + 1} of ${shoppingQueue.length}`;
       document.getElementById('shopping-item-name').innerText = `${item.quantity} ${item.name}`;
     }
+    
     function markDoneAndNext() {
       if(navigator.vibrate) navigator.vibrate(15);
       const current = shoppingQueue[shoppingIndex];
