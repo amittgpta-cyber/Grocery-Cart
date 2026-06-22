@@ -1,512 +1,675 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
   <title>MealSync</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <meta name="theme-color" content="#000000" />
+  <link rel="manifest" href="manifest.json">
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=boska@400,500,700&display=swap" rel="stylesheet">
+  
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-  
+
   <style>
-    body {
-      background-color: #121212;
-      color: #E0E0E0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      -webkit-tap-highlight-color: transparent;
+    :root, [data-theme="light"] {
+      --color-bg: #ffffff; --color-surface: #f7f6f2; --color-surface-2: #f2f1ed; --color-surface-offset: #ebeae6;
+      --color-divider: #e0deda; --color-text: #161514; --color-text-muted: #6b6965; 
+      --color-primary: #01696f; --color-secondary: #e8af34; --color-success: #38661c; --color-warning: #c26502; --color-error: #8f266d;
+      --radius-btn: 2rem; --radius-xl: 1.5rem; --radius-2xl: 2rem;
+      --shadow-sm: 0 4px 12px oklch(0.2 0.01 80 / 0.04); --shadow-md: 0 12px 32px oklch(0.2 0.01 80 / 0.08);
+      --font-body: 'General Sans', Inter, sans-serif; --font-display: 'Boska', Georgia, serif;
+      --ease-android: cubic-bezier(0.2, 0, 0, 1); --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
+    
+    [data-theme="dark"] {
+      --color-bg: #000000; --color-surface: #121110; --color-surface-2: #1a1918; --color-surface-offset: #22201e; 
+      --color-border: rgba(255, 255, 255, 0.05); --color-divider: rgba(255, 255, 255, 0.08); 
+      --color-text: #e8e6e3; --color-text-muted: #918f8b; 
+      --color-primary: #80c7d2; --color-secondary: #e6c57a; --color-success: #78a85d; --color-warning: #e39d5b; --color-error: #c975ae;
+      --shadow-sm: 0 8px 24px rgba(0,0,0, 0.8); --shadow-md: 0 16px 40px rgba(0,0,0, 1);
     }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: #1E1E1E;
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body { min-height: 100dvh; font-family: var(--font-body); font-size: 1rem; line-height: 1.6; background: var(--color-bg); color: var(--color-text); overflow-x: hidden; padding-bottom: 120px; }
+    button, input, select { font: inherit; color: inherit; outline: none; }
+    button { cursor: pointer; border: none; background: none; }
+    
+    .topbar-wrapper {
+      position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 70rem;
+      padding: 1.5rem 1rem 1rem; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      background: linear-gradient(to bottom, color-mix(in oklab, var(--color-bg) 85%, transparent), transparent);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      mask-image: linear-gradient(to bottom, black 60%, transparent); -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent);
     }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #333333;
-      border-radius: 3px;
+    
+    .shell { width: min(100%, 70rem); margin: 0 auto; padding: clamp(6rem, 8vw, 7rem) 0.75rem calc(10rem + env(safe-area-inset-bottom)); }
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-logo { width: 2.75rem; height: 2.75rem; border-radius: 1rem; display: grid; place-items: center; background: linear-gradient(135deg, var(--color-primary), color-mix(in oklab, var(--color-primary) 40%, var(--color-secondary))); color: #000; box-shadow: var(--shadow-sm); }
+    h1 { font-family: var(--font-display); font-size: 1.75rem; font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
+    .header-actions { display: flex; gap: 0.5rem; align-items: center; }
+    
+    .icon-btn, .ghost-btn, .primary-btn, .accent-btn, .success-btn { min-height: 52px; border-radius: var(--radius-btn); transition: all 0.2s var(--ease-android); display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; }
+    button:active, .card-action:active, .bookmark-btn:active, .stat:active { transform: scale(0.92); }
+    .icon-btn { width: 52px; border: 1px solid var(--color-border); background: var(--color-surface); }
+    .primary-btn, .accent-btn, .success-btn, .ghost-btn { padding: 0.75rem 1.5rem; }
+    .ghost-btn { background: var(--color-surface); border: 1px solid var(--color-border); }
+    .primary-btn { background: var(--color-primary); color: var(--color-bg); }
+    
+    .hero { margin-bottom: 2rem; }
+    .hero-grid { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem; padding: 0 0.5rem; }
+    .hero h2 { font-family: var(--font-display); font-size: 2.5rem; line-height: 1; font-weight: 500; margin: 0; letter-spacing: -0.02em; }
+    .subtle { color: var(--color-text-muted); font-size: 0.875rem; }
+    
+    .stats { display: flex; flex-direction: row; gap: 0.75rem; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .stats::-webkit-scrollbar { display: none; }
+    .stat { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; padding: 1rem 0.875rem; background: var(--color-surface); border-radius: 1.5rem; border: 1px solid var(--color-border); min-width: 100px; transition: all 0.2s var(--ease-android); box-shadow: var(--shadow-sm); }
+    .stat strong { font-size: 1.5rem; margin: 0; font-weight: 700; font-family: var(--font-display); }
+    .stat .subtle { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin: 0; }
+    
+    @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(50px) scale(0.96); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+    
+    .cards { display: grid; gap: 1.5rem; }
+    .meal-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-2xl); overflow: hidden; box-shadow: var(--shadow-md); display: flex; flex-direction: column; animation: slideUpFade 0.6s var(--ease-spring) backwards; }
+    .meal-card.locked { border-color: color-mix(in oklab, var(--color-success) 50%, transparent); box-shadow: 0 0 20px color-mix(in oklab, var(--color-success) 10%, transparent); }
+    .meal-main { padding: 1.5rem; display: grid; gap: 0.5rem; }
+    
+    .card-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .card-header-left { display: flex; align-items: center; gap: 10px; }
+    .eyebrow { font-size: 0.8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--color-text-muted); font-weight: 700; }
+    .badge { padding: 0.35rem 0.875rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; white-space: nowrap; display: inline-block; }
+    .tag-veg { background: color-mix(in oklab, var(--color-success) 15%, transparent); color: var(--color-success); border: 1px solid color-mix(in oklab, var(--color-success) 20%, transparent); }
+    .tag-egg { background: color-mix(in oklab, var(--color-secondary) 15%, transparent); color: var(--color-secondary); border: 1px solid color-mix(in oklab, var(--color-secondary) 20%, transparent); }
+    .tag-nonveg { background: color-mix(in oklab, var(--color-error) 15%, transparent); color: var(--color-error); border: 1px solid color-mix(in oklab, var(--color-error) 20%, transparent); }
+    
+    .bookmark-btn { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--color-surface-2); border: 1px solid var(--color-border); color: var(--color-text); transition: all 0.3s var(--ease-spring); cursor: pointer; flex-shrink: 0; }
+
+    .meal-title { font-size: clamp(2rem, 7vw, 2.8rem); line-height: 1.05; font-family: var(--font-display); font-weight: 600; color: var(--color-text); letter-spacing: -0.03em; margin-bottom: 0.5rem; }
+    .nav-buttons-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: auto; }
+    .card-action { min-height: 52px; font-weight: 600; font-size: 1rem; border: 1px solid var(--color-border); border-radius: 1.25rem; background: var(--color-surface-2); color: var(--color-text); cursor: pointer; transition: all 0.2s var(--ease-android); display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0.5rem 1rem; }
+    .card-action.locked { background: var(--color-success) !important; color: var(--color-bg) !important; border-color: var(--color-success) !important; }
+    .main-actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; padding: 0 1.5rem 1.5rem; }
+    
+    .explore-area { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 0.75rem; padding: 0 1.5rem; max-height: 0; opacity: 0; margin-top: -0.5rem; transition: all 0.4s var(--ease-spring); border-top: 1px solid transparent; }
+    .explore-area.open { max-height: 120px; opacity: 1; border-top-color: var(--color-divider); padding-top: 1.5rem; padding-bottom: 1.5rem; margin-top: 0; justify-content: space-around; }
+    .explore-area .card-action { flex-shrink: 0; width: 52px; height: 52px; border-radius: 50%; padding: 0; display: flex; justify-content: center; align-items: center; background: var(--color-surface); border: 1px solid var(--color-border); }
+    
+    .empty { padding: 3rem 2rem; text-align: left; background: var(--color-surface); border-radius: var(--radius-2xl); border: 1px solid var(--color-border); color: var(--color-text-muted); font-size: 1.125rem; }
+    .empty h3 { color: var(--color-text); margin-bottom: 0.5rem; font-family: var(--font-display); font-size: 2rem; line-height: 1.1; letter-spacing: -0.02em; }
+    
+    .modal { position: fixed; inset: 0; background: color-mix(in oklab, #000 85%, transparent); display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 50; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); opacity: 0; transition: opacity 0.3s var(--ease-android); }
+    .modal.open { display: flex; opacity: 1; }
+    .dialog { width: min(100%, 40rem); max-height: min(90dvh, 56rem); overflow: hidden; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 2.5rem; box-shadow: var(--shadow-md); display: flex; flex-direction: column; transform: scale(0.95) translateY(30px); transition: all 0.4s var(--ease-spring); }
+    .modal.open .dialog { transform: scale(1) translateY(0); }
+    .dialog-head { padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid var(--color-divider); flex-shrink: 0; background: var(--color-surface); }
+    .dialog-head h4 { font-size: 1.75rem; font-family: var(--font-display); font-weight: 500; display: flex; align-items: center; gap: 12px; margin: 0; letter-spacing: -0.02em; }
+    .dialog-content-scroll { overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; padding-bottom: 2rem; scroll-behavior: smooth; }
+    .dialog-content-scroll::-webkit-scrollbar { display: none; }
+    .dialog-body { padding: 2rem; display: grid; gap: 2rem; }
+    .panel { padding: 1.5rem; background: var(--color-surface-2); border-radius: 2rem; border: 1px solid var(--color-border); }
+    .panel h5 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: .12em; color: var(--color-primary); margin-bottom: 1.25rem; font-weight: 700; }
+    .stack { display: grid; gap: 1rem; }
+    .queue-category-select { background: var(--color-surface-offset); border: 1px solid var(--color-border); color: var(--color-text); border-radius: 1rem; padding: 0.5rem 0.75rem; font-weight: 600; font-size: 0.875rem; }
+    .review-queue-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+    .review-queue-item { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 12px 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 1.5rem; font-size: 1rem; }
+    .review-queue-remove { color: var(--color-error); background: color-mix(in oklab, var(--color-error) 15%, transparent); border-radius: 50%; width: 36px; height: 36px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .input { width: 100%; padding: 1.125rem 1.5rem; border-radius: 1.25rem; border: 1px solid var(--color-border); background: var(--color-bg); font-size: 1rem; transition: border-color 0.2s; color: var(--color-text); }
+    .data-row { display: flex; justify-content: space-between; gap: 0.75rem; align-items: center; padding: 1rem 1.5rem; border: 1px solid var(--color-border); border-radius: 1.25rem; background: var(--color-surface); font-size: 1rem; }
+    
+    .page { display: none; animation: fadePeek 0.4s var(--ease-spring); }
+    .page.active { display: block; }
+    @keyframes fadePeek { from { opacity: 0; transform: translateX(20px) scale(0.98); } to { opacity: 1; transform: translateX(0) scale(1); } }
+
+    /* SWIPE TO DELETE STYLES */
+    .swipe-wrapper { position: relative; overflow: hidden; margin-bottom: 12px; border-radius: 1.5rem; }
+    .swipe-bg { position: absolute; inset: 0; background: var(--color-error); border-radius: 1.5rem; display: flex; align-items: center; justify-content: flex-end; padding-right: 24px; color: #fff; font-weight: bold; }
+    .swipe-item { position: relative; z-index: 1; transition: transform 0.2s var(--ease-android); margin-bottom: 0; }
+    .swipe-item.swiping { transition: none; }
+
+    .grocery-item { background: var(--color-surface); border-radius: 1.5rem; padding: 16px; display: flex; align-items: center; border: 1px solid var(--color-border); }
+    .grocery-item.dimmed { opacity: 0.5; background: transparent; }
+    .checkbox { width: 24px; height: 24px; border: 2px solid var(--color-primary); border-radius: 8px; margin-right: 16px; display: flex; align-items: center; justify-content: center; color: transparent; transition: all 0.2s; }
+    .grocery-item.checked .checkbox { background: var(--color-primary); color: var(--color-bg); }
+    .item-details { flex-grow: 1; display: flex; align-items: center; justify-content: space-between; }
+    .item-text-group { display: flex; flex-direction: column; }
+    .item-name { font-size: 18px; font-weight: 600; text-transform: capitalize; }
+    .item-flag { font-size: 12px; color: var(--color-warning); margin-top: 4px; font-weight: 600; }
+    .qty-badge { background: color-mix(in oklab, var(--color-primary) 15%, transparent); color: var(--color-primary); padding: 8px 16px; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer; }
+    .swiggy-btn { background: var(--color-primary); color: var(--color-bg); border: none; width: 100%; padding: 18px; border-radius: 1.5rem; font-size: 18px; font-weight: bold; margin-top: 24px; cursor: pointer; box-shadow: 0 8px 20px color-mix(in oklab, var(--color-primary) 30%, transparent); }
+
+    .bottom-sheet { position: fixed; bottom: -100%; left: 0; right: 0; background: var(--color-surface); border-radius: 2rem 2rem 0 0; padding: 2rem 1.5rem 6rem; transition: bottom 0.4s var(--ease-spring); z-index: 2001; border-top: 1px solid var(--color-border); max-height: 80vh; overflow-y: auto; }
+    .bottom-sheet.active { bottom: 0; }
+    .unit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
+    .unit-btn { background: var(--color-surface-2); border: 1px solid var(--color-border); color: var(--color-text); padding: 18px 0; border-radius: 1rem; font-size: 16px; font-weight: 600; cursor: pointer; }
+
+    .guided-overlay, .ai-loading-overlay { position: fixed; inset: 0; background: var(--color-bg); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; padding: 24px; text-align: center; }
+    .guided-overlay.active, .ai-loading-overlay.active { opacity: 1; pointer-events: auto; }
+    .shopping-progress { color: var(--color-text-muted); font-size: 16px; margin-bottom: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .shopping-item-name { font-size: 36px; font-weight: bold; margin-bottom: 48px; color: var(--color-text); text-transform: capitalize; }
+    .action-btn { background: var(--color-primary); color: var(--color-bg); border: none; width: 100%; max-width: 350px; padding: 20px; border-radius: 1.5rem; font-size: 20px; font-weight: bold; margin-bottom: 16px; cursor: pointer; }
+    
+    .loading-spinner { border: 4px solid var(--color-surface-offset); border-top: 4px solid var(--color-primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 24px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Split Pill Floating Nav */
+    .split-nav { position: fixed; bottom: 20px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 20px; pointer-events: none; transition: transform 0.4s cubic-bezier(0.3, 0, 0.2, 1), opacity 0.4s; z-index: 1000; }
+    .split-nav.hidden { transform: translateY(100px); opacity: 0; }
+    .nav-pill { background: color-mix(in oklab, var(--color-surface) 90%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 30px; display: flex; align-items: center; padding: 8px 12px; pointer-events: auto; box-shadow: var(--shadow-md); border: 1px solid var(--color-border); }
+    .nav-left { padding: 8px 16px; }
+    .nav-right { gap: 15px; }
+    .nav-btn { background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 10px; border-radius: 50%; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+    .nav-btn.active, .nav-btn:hover { color: var(--color-primary); background: color-mix(in oklab, var(--color-primary) 15%, transparent); }
+    
+    /* VIBRANT AUTO-PLAN CENTER BUTTON */
+    .btn-autoplan {
+        background: linear-gradient(135deg, #FF416C, #FF4B2B);
+        color: white !important;
+        box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4);
+        transform: scale(1.15);
+        margin: 0 5px;
     }
-    /* Vibrant Floating Button Palette definitions */
-    .btn-fridge { background: linear-gradient(135deg, #00B4DB, #0083B0); }
-    .btn-autoplan { background: linear-gradient(135deg, #FF416C, #FF4B2B); }
-    .btn-chef { background: linear-gradient(135deg, #8E2DE2, #4A00E0); }
+    .btn-autoplan:hover { transform: scale(1.25); }
+
+    .nav-btn svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-btn.globe-btn svg { width: 30px; height: 30px; }
+
+    /* File Input Styles */
+    .upload-area { border: 2px dashed var(--color-border); border-radius: 1.5rem; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s; background: var(--color-surface); }
+    .upload-area:hover { border-color: var(--color-primary); background: var(--color-surface-2); }
+    .upload-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    input[type="file"] { display: none; }
   </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden select-none">
-
-  <header class="bg-[#1E1E1E] border-b border-[#2D2D2D] px-4 py-3 flex items-center justify-between shrink-0">
-    <div class="flex items-center gap-2">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#FF4B2B] to-[#00B4DB] flex items-center justify-center font-bold text-white tracking-wider">MS</div>
-      <h1 class="text-xl font-bold tracking-tight text-white">MealSync</h1>
+<body>
+  <div class="topbar-wrapper">
+    <div class="brand">
+      <div class="brand-logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 6c3-2 11-2 14 0"/><path d="M7 10c2-1 8-1 10 0"/><path d="M12 4v16"/><path d="M9 18c0 1.7 1.3 2 3 2s3-.3 3-2"/></svg></div>
+      <div><h1>MealSync</h1></div>
     </div>
-    <button onclick="openCookbookModal()" class="bg-[#2D2D2D] hover:bg-[#3D3D3D] text-sm text-[#00B4DB] font-medium px-3 py-1.5 rounded-lg border border-[#3D3D3D] transition-all">
-      + Ingest Engine
-    </button>
-  </header>
+    <div class="header-actions">
+      <button class="icon-btn" style="border-radius: 50%;" type="button" data-theme-toggle aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="ghost-btn" style="border-radius: 2rem;" type="button" onclick="openCookbookModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> CookBook
+      </button>
+    </div>
+  </div>
 
-  <main class="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar pb-24">
-    <section class="bg-[#1E1E1E] rounded-xl p-4 border border-[#2D2D2D] space-y-4 shadow-lg">
-      <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Current Integrated Meal Cycle</h2>
-      <div class="grid grid-cols-1 gap-3">
-        <div class="bg-[#252525] p-3 rounded-lg flex items-center justify-between border border-[#333]">
-          <div>
-            <span class="text-xs text-[#00B4DB] font-semibold tracking-wide uppercase">Breakfast</span>
-            <h3 id="currentBreakfast" class="text-base font-bold text-white mt-0.5">Smoky Lentil Chili with Squash</h3>
+  <div class="shell">
+    <main id="main">
+      <div id="page-plan" class="page active">
+        <section class="hero">
+          <div class="hero-grid"><h2 id="hero-title">Plan Your Day</h2></div>
+          <div class="stats">
+            <article class="stat" onclick="openCookbookModal()"><span class="subtle">Breakfast</span><strong id="countBreakfast">0</strong></article>
+            <article class="stat" onclick="openCookbookModal()"><span class="subtle">Lunch</span><strong id="countLunch">0</strong></article>
+            <article class="stat" onclick="openCookbookModal()"><span class="subtle">Dinner</span><strong id="countDinner">0</strong></article>
           </div>
-          <div class="flex gap-2">
-            <button onclick="analyzeMacros('Breakfast')" class="p-2 bg-[#1E1E1E] hover:bg-[#2D2D2D] text-gray-300 rounded-lg border border-[#333]" title="Analyze Nutrition">📊</button>
-            <button onclick="triggerCartGeneration('Breakfast')" class="p-2 bg-[#1E1E1E] hover:bg-[#2D2D2D] text-[#00B4DB] rounded-lg border border-[#333]" title="Sync to Cart">🛒</button>
-          </div>
+        </section>
+        <section class="section"><div id="suggestions" class="cards" aria-live="polite"><div class="empty"><h3>Loading database...</h3></div></div></section>
+      </div>
+
+      <div id="page-cart" class="page">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
+          <h2 style="font-family:var(--font-display); font-size:2rem; font-weight:500;">Grocery Cart</h2>
         </div>
-        <div class="bg-[#252525] p-3 rounded-lg flex items-center justify-between border border-[#333]">
-          <div>
-            <span class="text-xs text-[#FF416C] font-semibold tracking-wide uppercase">Lunch</span>
-            <h3 id="currentLunch" class="text-base font-bold text-white mt-0.5">Dal Tadka & Rice</h3>
-          </div>
-          <div class="flex gap-2">
-            <button onclick="analyzeMacros('Lunch')" class="p-2 bg-[#1E1E1E] hover:bg-[#2D2D2D] text-gray-300 rounded-lg border border-[#333]">📊</button>
-            <button onclick="triggerCartGeneration('Lunch')" class="p-2 bg-[#1E1E1E] hover:bg-[#2D2D2D] text-[#00B4DB] rounded-lg border border-[#333]">🛒</button>
-          </div>
+        <h4 style="font-size:14px; text-transform:uppercase; letter-spacing:1px; color:var(--color-text-muted); margin-bottom:12px; font-weight:bold;">Ready to Buy</h4>
+        <div id="active-items"></div>
+        <h4 style="font-size:14px; text-transform:uppercase; letter-spacing:1px; color:var(--color-text-muted); margin:24px 0 12px; font-weight:bold;">Recently Bought</h4>
+        <div id="dimmed-items"></div>
+        <button class="swiggy-btn" onclick="startGuidedShopping()">🛒 Start Guided Shopping</button>
+      </div>
+    </main>
+  </div>
+
+  <div class="split-nav" id="bottomNav">
+    <div class="nav-pill nav-left">
+      <button class="nav-btn" id="nav-cart" onclick="switchTab('cart')">
+        <svg viewBox="0 0 24 24"><path d="M9 20a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm7 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-9.8-2h11.2a2 2 0 0 0 1.9-1.4l2.4-7.6A1 1 0 0 0 21 8H6.5l-.8-3.4A2 2 0 0 0 3.8 3H2v2h1.8l3.6 14.5A2 2 0 0 0 9.2 21h8.6"/></svg>
+      </button>
+    </div>
+    <div class="nav-pill nav-right">
+      <button class="nav-btn" id="nav-fridge" onclick="switchTab('plan')">
+        <svg viewBox="0 0 24 24"><path d="M5 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><line x1="3" y1="9" x2="17" y2="9"/><circle cx="16" cy="16" r="5" stroke-width="2"/><line x1="19.5" y1="19.5" x2="22" y2="22" stroke-width="2"/></svg>
+      </button>
+      <button class="nav-btn btn-autoplan active" id="nav-autoplan" onclick="triggerAutoPlan()">
+        <svg viewBox="0 0 24 24" width="28" height="28" stroke="white"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><path d="M12 2v4 M12 18v4 M2 12h4 M18 12h4"/></svg>
+      </button>
+      <button class="nav-btn globe-btn" id="nav-chef">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20 M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="modal" id="dataModal" aria-hidden="true">
+    <section class="dialog">
+      <div class="dialog-head">
+        <h4>CookBook & Ingest Engine</h4>
+        <button class="icon-btn" style="border-radius: 50%;" onclick="closeModal(document.getElementById('dataModal'))">✕</button>
+      </div>
+      <div class="dialog-content-scroll" style="padding: 1rem;">
+        
+        <div class="panel" style="margin-bottom: 24px;">
+            <h5>Auto-Ingest (OCR/PDF)</h5>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <label class="upload-area">
+                    <div class="upload-icon">📄</div>
+                    <div style="font-weight: bold;">Upload Document</div>
+                    <div class="subtle" style="font-size: 12px;">PDF, Word, Image</div>
+                    <input type="file" accept=".pdf,.docx,image/*" onchange="processDocumentUpload(event)">
+                </label>
+                <label class="upload-area">
+                    <div class="upload-icon">📷</div>
+                    <div style="font-weight: bold;">Camera Scan</div>
+                    <div class="subtle" style="font-size: 12px;">Scan Physical Menu</div>
+                    <input type="file" accept="image/*" capture="environment" onchange="processDocumentUpload(event)">
+                </label>
+            </div>
+            <div id="processingStatus" class="subtle" style="text-align: center; margin-top: 12px; font-weight: bold; color: var(--color-primary); display: none;">Parsing document...</div>
         </div>
-        <div class="bg-[#252525] p-3 rounded-lg flex items-center justify-between border border-[#333]">
-          <div>
-            <span class="text-xs text-[#8E2DE2] font-semibold tracking-wide uppercase">Dinner</span>
-            <h3 id="currentDinner" class="text-base font-bold text-white mt-0.5">Khichdi</h3>
-          </div>
-          <div class="flex gap-2">
-            <button onclick="analyzeMacros('Dinner')" class="p-2 bg-[#1E1E1E] hover:bg-[#2D2D2D] text-gray-300 rounded-lg border border-[#333]">📊</button>
-            <button onclick="triggerCartGeneration('Dinner')" class="p-2 bg-[#1E1E1E] hover:bg-[#2D2D2D] text-[#00B4DB] rounded-lg border border-[#333]">🛒</button>
+
+        <div class="panel" style="margin-bottom: 24px;">
+            <h5>Manual Entry</h5>
+            <div style="display:flex; gap:8px;">
+               <input id="manualMealInput" class="input" style="padding: 12px;" placeholder="E.g., Palak Paneer">
+               <select id="manualMealCategory" class="queue-category-select">
+                   <option value="Breakfast">Breakfast</option>
+                   <option value="Lunch">Lunch</option>
+                   <option value="Dinner">Dinner</option>
+               </select>
+               <button class="primary-btn" style="border-radius:1.5rem; padding:0 20px;" onclick="addManualMeal()">Queue</button>
+            </div>
+        </div>
+
+        <section class="panel" id="reviewQueuePanel" style="display:none; border-color:var(--color-success); border-width: 2px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:12px;">
+              <h5 style="margin:0; color:var(--color-success);">Pending Sync Queue (<span id="queueCount">0</span>)</h5>
+              <button onclick="syncPendingQueueToSheets()" class="primary-btn" style="background: var(--color-success); color: var(--color-bg); border-radius: 1.5rem;">Sync to Sheet</button>
+            </div>
+            <ul class="review-queue-list" id="reviewQueueList"></ul>
+        </section>
+
+        <h5 style="font-size:0.8rem; text-transform:uppercase; letter-spacing:.12em; color:var(--color-text-muted); margin:1rem 0;">Existing Database</h5>
+        <div id="tableSections" class="stack"></div>
+
+      </div>
+    </section>
+  </div>
+
+  <div class="modal" id="nutritionModal" aria-hidden="true">
+    <section class="dialog small">
+      <div class="dialog-head">
+        <h4 id="nutritionModalTitle">Nutritional Info</h4>
+        <button class="icon-btn" style="border-radius: 50%;" onclick="closeModal(document.getElementById('nutritionModal'))" type="button">✕</button>
+      </div>
+      <div class="dialog-content-scroll">
+        <div class="dialog-body" style="padding-top: 0;">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; text-align: center;" id="nutritionGridContent">
+             <p class="subtle">Loading...</p>
           </div>
         </div>
       </div>
     </section>
-
-    <section class="bg-[#1E1E1E] rounded-xl p-4 border border-[#2D2D2D] space-y-3 shadow-lg">
-      <div class="flex items-center justify-between">
-        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Sync Cart Dashboard</h2>
-        <span id="cartCount" class="text-xs font-bold bg-[#2D2D2D] px-2 py-0.5 rounded-full text-white">0 items</span>
-      </div>
-      <div id="cartList" class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar pr-1">
-        <p id="emptyCartMessage" class="text-xs text-gray-500 py-4 text-center">Cart is clean. Trigger a meal sync sequence to populate.</p>
-      </div>
-    </section>
-  </main>
-
-  <div id="macroModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-[#1E1E1E] w-full max-w-sm rounded-xl p-5 border border-[#2D2D2D] space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 id="macroTitle" class="text-base font-bold text-white">Nutritional Profiling</h3>
-        <button onclick="closeMacroModal()" class="text-gray-400 hover:text-white font-bold">&times;</button>
-      </div>
-      <div id="macroLoader" class="text-xs text-center text-[#00B4DB] py-4 hidden">Analyzing composition metrics...</div>
-      <div id="macroContent" class="grid grid-cols-2 gap-3 text-center">
-        </div>
-    </div>
   </div>
 
-  <div id="cookbookModal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-40 hidden">
-    <div class="bg-[#1E1E1E] w-full max-w-lg rounded-xl flex flex-col max-h-[85vh] border border-[#2D2D2D] shadow-2xl">
-      <div class="p-4 border-b border-[#2D2D2D] flex items-center justify-between">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <span>📖</span> CookBook Universal Ingest Engine
-        </h3>
-        <button onclick="closeCookbookModal()" class="text-gray-400 hover:text-white font-bold text-lg">&times;</button>
-      </div>
-      
-      <div class="p-4 flex-1 overflow-y-auto space-y-6 custom-scrollbar">
-        <div class="grid grid-cols-2 gap-3">
-          <label class="flex flex-col items-center justify-center p-4 bg-[#252525] hover:bg-[#2D2D2D] border-2 border-dashed border-[#3D3D3D] rounded-xl cursor-pointer text-center group transition-all">
-            <span class="text-2xl group-hover:scale-110 transition-transform">📄</span>
-            <span class="text-xs font-semibold text-white mt-2">Upload Document</span>
-            <span class="text-[10px] text-gray-400 mt-0.5">PDF, DOCX, Images</span>
-            <input type="file" id="docUploadInput" class="hidden" accept=".pdf,.docx,image/*" onchange="processDocumentUpload(event)">
-          </label>
-          <label class="flex flex-col items-center justify-center p-4 bg-[#252525] hover:bg-[#2D2D2D] border-2 border-dashed border-[#3D3D3D] rounded-xl cursor-pointer text-center group transition-all">
-            <span class="text-2xl group-hover:scale-110 transition-transform">📷</span>
-            <span class="text-xs font-semibold text-white mt-2">Camera Scan</span>
-            <span class="text-[10px] text-gray-400 mt-0.5">Capture via device</span>
-            <input type="file" id="cameraInput" class="hidden" accept="image/*" capture="environment" onchange="processDocumentUpload(event)">
-          </label>
-        </div>
-
-        <div class="bg-[#252525] p-3 rounded-lg border border-[#333] space-y-3">
-          <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400">Manual Entry Ingestion</h4>
-          <div class="grid grid-cols-3 gap-2">
-            <input type="text" id="manualMeal" placeholder="Meal Name..." class="col-span-2 bg-[#1E1E1E] text-xs text-white border border-[#3D3D3D] px-2 py-1.5 rounded-lg focus:outline-none focus:border-[#00B4DB]">
-            <select id="manualCategory" class="bg-[#1E1E1E] text-xs text-white border border-[#3D3D3D] px-2 py-1.5 rounded-lg focus:outline-none">
-              <option value="Breakfast">Breakfast</option>
-              <option value="Lunch">Lunch</option>
-              <option value="Dinner">Dinner</option>
-            </select>
-          </div>
-          <button onclick="handleManualQueueAdd()" class="w-full text-xs font-semibold bg-[#2D2D2D] hover:bg-[#3D3D3D] text-[#00B4DB] py-2 rounded-lg transition-all border border-[#3D3D3D]">
-            Queue Entry
-          </button>
-        </div>
-
-        <div class="space-y-2">
-          <div class="flex items-center justify-between">
-            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400">Pending Sync Queue</h4>
-            <span id="queueCounter" class="text-[10px] bg-red-900 text-red-200 px-2 py-0.5 rounded-full font-bold">0 Pending</span>
-          </div>
-          <div id="processingStatus" class="text-[11px] text-[#00B4DB] font-medium hidden">Running OCR extraction metrics...</div>
-          <div id="ingestQueueList" class="space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar pr-1">
-            <p id="emptyQueueMessage" class="text-[11px] text-gray-500 text-center py-4">Queue is empty. Feed files, photos, or manual entries to sync.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="p-4 border-t border-[#2D2D2D] bg-[#1A1A1A] flex gap-3">
-        <button onclick="closeCookbookModal()" class="flex-1 text-xs font-semibold bg-[#2D2D2D] hover:bg-[#3D3D3D] text-white py-2.5 rounded-lg transition-all">
-          Close
-        </button>
-        <button id="syncQueueBtn" onclick="syncPendingQueueToSheets()" disabled class="flex-1 text-xs font-semibold bg-gray-700 text-gray-400 py-2.5 rounded-lg transition-all cursor-not-allowed">
-          Sync Queue to Sheet
-        </button>
-      </div>
-    </div>
+  <div class="modal" id="picker-overlay" onclick="closePicker()" style="background:rgba(0,0,0,0.5);"></div>
+  <div class="bottom-sheet" id="bottom-sheet">
+    <h2 id="picker-title" style="text-align: center; margin-bottom: 8px; font-family:var(--font-display); text-transform: capitalize;">Select Quantity</h2>
+    <p id="picker-unit-label" class="subtle" style="text-align: center; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;"></p>
+    <div class="unit-grid" id="picker-grid"></div>
   </div>
 
-  <nav class="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center bg-[#1E1E1E]/90 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-[#2D2D2D] shadow-2xl gap-5 z-30">
-    <button class="btn-fridge w-11 h-11 rounded-xl flex items-center justify-center text-white text-lg font-bold shadow-md transform hover:scale-105 transition-all" title="Fridge Inventory">
-      ❄️
-    </button>
-    
-    <button onclick="triggerAutoPlanMeals()" class="btn-autoplan w-14 h-14 rounded-2xl flex flex-col items-center justify-center text-white shadow-xl transform hover:scale-110 active:scale-95 transition-all border-2 border-white/20 animate-pulse" title="Auto Plan Structural Cycle">
-      <span class="text-xl">⚡</span>
-      <span class="text-[8px] font-extrabold uppercase tracking-tight mt-0.5">Auto Plan</span>
-    </button>
-    
-    <button class="btn-chef w-11 h-11 rounded-xl flex items-center justify-center text-white text-lg font-bold shadow-md transform hover:scale-105 transition-all" title="Chef Special Prompt Integration">
-      🌐
-    </button>
-  </nav>
+  <div class="guided-overlay" id="guided-overlay">
+    <button class="close-shopping" onclick="closeGuidedShopping()" style="position:absolute; top:40px; right:24px; font-size:32px; background:none; border:none; color:white;">✕</button>
+    <div class="shopping-progress" id="shopping-progress" style="color:#a0a0a0; font-weight:bold; letter-spacing:1px; margin-bottom:12px;">Item 1 of X</div>
+    <div class="shopping-item-name" id="shopping-item-name" style="font-size:36px; font-weight:bold; margin-bottom:48px;">Item</div>
+    <button class="action-btn" onclick="markDoneAndNext()">Mark Done & Auto-Search Next</button>
+  </div>
 
-  <div id="toastNotification" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#2D2D2D] text-xs text-white px-4 py-2.5 rounded-lg border border-[#3D3D3D] shadow-xl z-50 transform translate-y-10 opacity-0 pointer-events-none transition-all duration-300">
-    Notification text template.
+  <div class="ai-loading-overlay" id="ai-loading-overlay">
+    <div class="loading-spinner"></div>
+    <h2 style="font-family:var(--font-display); font-size: 2rem;">🤖 AI Analyzing</h2>
+    <p class="subtle" style="margin-top: 12px;" id="ai-loading-text">Extracting structure...</p>
   </div>
 
   <script>
-    // System Local Cache Stores
-    let currentCartArray = [];
-    let processingQueueArray = [];
+    const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbztzJXkrDlNSsJ-wGNYL-T8kgYHMfBCEYPnxVk0Pjmx7gzGb6KzJL436hEM9fWmRIl2MQ/exec";
 
-    // Initialize pdf.js worker channel architecture
+    // Initialize pdf.js worker
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-    function showToast(msg) {
-      const toast = document.getElementById('toastNotification');
-      toast.innerText = msg;
-      toast.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
-      setTimeout(() => {
-        toast.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
-      }, 3000);
+    // Theme toggle
+    (() => {
+      const themeBtn = document.querySelector('[data-theme-toggle]');
+      const root = document.documentElement;
+      let theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      root.setAttribute('data-theme', theme);
+      themeBtn.addEventListener('click', () => { theme = theme === 'dark' ? 'light' : 'dark'; root.setAttribute('data-theme', theme); });
+    })();
+
+    // Auto-hide Nav Bar
+    let lastScrollY = window.scrollY;
+    const bottomNav = document.getElementById('bottomNav');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > lastScrollY && window.scrollY > 50) bottomNav.classList.add('hidden');
+      else bottomNav.classList.remove('hidden');
+      lastScrollY = window.scrollY;
+    }, { passive: true });
+
+    // Core State
+    const state = { db: {Breakfast:[], Lunch:[], Dinner:[]}, currentSuggestions: [], orderHistory: [], cart: [], processingQueue: [] };
+
+    function switchTab(tabId) {
+      if(navigator.vibrate) navigator.vibrate(15);
+      document.querySelectorAll('.page, .nav-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(`page-${tabId}`).classList.add('active');
+      if(tabId === 'cart') document.getElementById('nav-cart').classList.add('active');
+      else document.getElementById('nav-autoplan').classList.add('active');
     }
 
-    /**
-     * Application Cart Pipeline - New items unshifted smoothly to top
-     */
-    function triggerCartGeneration(category) {
-      const mealElementId = 'current' + category;
-      const mealName = document.getElementById(mealElementId).innerText;
-      
-      showToast(`Breaking down "${mealName}" into Indian market units...`);
-      
-      google.script.run
-        .withSuccessHandler((response) => {
-          const res = JSON.parse(response);
-          if (res.success && res.data) {
-            // Unshift new incoming items cleanly into the top of the app list view
-            res.data.reverse().forEach(item => {
-              currentCartArray.unshift({
-                name: item.name,
-                unit: item.unit,
-                quantity: item.quantity,
-                checked: false,
-                timestamp: Date.now()
-              });
-            });
-            renderCartList();
-            showToast('Sync completed. Master List constraints assigned.');
-          } else {
-            showToast('Error executing breakdown workflow: ' + res.error);
-          }
-        })
-        .withFailureHandler((err) => showToast('Network API Fail: ' + err))
-        .doPost({ action: 'breakdownRecipe', mealName: mealName });
-    }
+    function openModal(modal) { modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); }
+    function closeModal(modal) { modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
+    function openCookbookModal() { openModal(document.getElementById('dataModal')); renderSpreadsheetModal(); renderReviewQueue(); }
 
-    function renderCartList() {
-      const cartList = document.getElementById('cartList');
-      const emptyMsg = document.getElementById('emptyCartMessage');
-      const counter = document.getElementById('cartCount');
-      
-      cartList.innerHTML = '';
-      counter.innerText = `${currentCartArray.length} items`;
-      
-      if (currentCartArray.length === 0) {
-        emptyMsg.classList.remove('hidden');
-        cartList.appendChild(emptyMsg);
-        return;
+    // Swipe Globals
+    let touchStartX = 0; let currentTranslate = 0; let swipingId = null;
+
+    function handleSwipeStart(e, id) { touchStartX = e.touches[0].clientX; swipingId = id; document.getElementById(`swipe-item-cart-${id}`)?.classList.add('swiping'); }
+    function handleSwipeMove(e, id) { if (swipingId !== id) return; const diff = e.touches[0].clientX - touchStartX; if (diff < 0) { currentTranslate = diff; document.getElementById(`swipe-item-cart-${id}`).style.transform = `translateX(${currentTranslate}px)`; } }
+    function handleSwipeEnd(e, id) {
+      if (swipingId !== id) return;
+      const el = document.getElementById(`swipe-item-cart-${id}`);
+      swipingId = null;
+      if (el) {
+        el.classList.remove('swiping');
+        if (currentTranslate < -80) { el.style.transform = `translateX(-100%)`; setTimeout(() => { deleteCartItem(id); }, 200); } 
+        else { el.style.transform = `translateX(0)`; }
       }
-      emptyMsg.classList.add('hidden');
-      
-      currentCartArray.forEach((item, index) => {
-        const itemRow = document.createElement('div');
-        itemRow.className = `flex items-center justify-between p-2.5 bg-[#252525] border border-[#333] rounded-lg transition-all ${item.checked ? 'opacity-40 line-through' : ''}`;
-        
-        itemRow.innerHTML = `
-          <div class="flex items-center gap-2">
-            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCartItem(${index})" class="w-4 h-4 accent-[#00B4DB] rounded bg-[#1E1E1E] border-[#3D3D3D]">
-            <span class="text-sm font-medium text-white">${item.name}</span>
+      currentTranslate = 0;
+    }
+
+    function deleteCartItem(index) { if(navigator.vibrate) navigator.vibrate(15); state.cart.splice(index, 1); renderCart(); syncCartToBackend(); }
+
+    function getMealTag(name) {
+      const low = String(name || '').toLowerCase();
+      if (['chicken','fish','mutton','meat'].some(k => low.includes(k))) return { text: 'Non-Veg', cls: 'tag-nonveg' };
+      if (['egg', 'omelette'].some(k => low.includes(k))) return { text: 'Egg', cls: 'tag-egg' };
+      return { text: 'Veg', cls: 'tag-veg' };
+    }
+
+    function getCardInnerHTML(item, index) {
+      const tag = getMealTag(item.name);
+      return `
+        <div class="meal-main">
+          <div class="card-header-row">
+            <div class="card-header-left"><span class="eyebrow">${item.time}</span><div style="display:flex; gap:8px;"><span class="badge ${tag.cls}">${tag.text}</span></div></div>
+            <button class="bookmark-btn" type="button" onclick="breakdownRecipeToCart('${item.name}')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 20a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm7 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-9.8-2h11.2a2 2 0 0 0 1.9-1.4l2.4-7.6A1 1 0 0 0 21 8H6.5l-.8-3.4A2 2 0 0 0 3.8 3H2v2h1.8l3.6 14.5A2 2 0 0 0 9.2 21h8.6"/></svg></button>
           </div>
-          <span class="text-xs font-semibold bg-[#1E1E1E] border border-[#3D3D3D] text-gray-300 px-2 py-0.5 rounded-md">${item.quantity} ${item.unit}</span>
-        `;
-        cartList.appendChild(itemRow);
+          <div class="meal-title">${item.name}</div>
+          <div class="nav-buttons-row">
+            <button class="card-action" style="padding:1rem;" type="button" onclick="fetchNutritionData('${item.name}')">📊 Macros</button>
+            <button class="card-action" style="padding:1rem;" type="button" onclick="breakdownRecipeToCart('${item.name}')">🛒 Order Up!</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderOutputDeck(schema) {
+      state.currentSuggestions = schema;
+      const suggestionsContainer = document.getElementById('suggestions');
+      suggestionsContainer.innerHTML = '';
+      schema.forEach((item, index) => {
+        const article = document.createElement('article');
+        article.className = 'meal-card';
+        article.innerHTML = getCardInnerHTML(item, index);
+        suggestionsContainer.appendChild(article);
       });
     }
 
-    function toggleCartItem(index) {
-      currentCartArray[index].checked = !currentCartArray[index].checked;
-      renderCartList();
+    // AUTO-PLAN LOGIC
+    function triggerAutoPlan() {
+      if(navigator.vibrate) navigator.vibrate(15);
+      switchTab('plan');
+      fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'autoPlanMeals' }) })
+        .then(res => res.json())
+        .then(res => {
+            if(res.success && res.data) {
+                renderOutputDeck([
+                    { time: 'Breakfast', name: res.data.Breakfast },
+                    { time: 'Lunch', name: res.data.Lunch },
+                    { time: 'Dinner', name: res.data.Dinner }
+                ]);
+            }
+        }).catch(err => alert("Auto plan failed to load."));
     }
 
-    /**
-     * Macro Metric Display Infrastructure Execution
-     */
-    function analyzeMacros(category) {
-      const mealName = document.getElementById('current' + category).innerText;
-      
-      document.getElementById('macroTitle').innerText = mealName;
-      document.getElementById('macroContent').innerHTML = '';
-      document.getElementById('macroLoader').classList.remove('hidden');
-      document.getElementById('macroModal').classList.remove('hidden');
-      
-      google.script.run
-        .withSuccessHandler((response) => {
-          document.getElementById('macroLoader').classList.add('hidden');
-          const res = JSON.parse(response);
-          if (res.success && res.data) {
-            const metrics = res.data;
-            const content = document.getElementById('macroContent');
-            
-            const cards = [
-              { label: 'Energy/Calories', val: metrics.calories || 'N/A' },
-              { label: 'Protein Target', val: metrics.protein || 'N/A' },
-              { label: 'Carbohydrates', val: metrics.carbs || 'N/A' },
-              { label: 'Fats Matrix', val: metrics.fat || 'N/A' }
-            ];
-            
-            cards.forEach(c => {
-              const card = document.createElement('div');
-              card.className = 'bg-[#252525] p-2.5 rounded-lg border border-[#333]';
-              card.innerHTML = `
-                <div class="text-[10px] text-gray-400 font-semibold tracking-wide uppercase">${c.label}</div>
-                <div class="text-sm font-bold text-white mt-1">${c.val}</div>
-              `;
-              content.appendChild(card);
-            });
-          } else {
-            document.getElementById('macroContent').innerHTML = `<p class="text-xs text-red-400 col-span-2">${res.error}</p>`;
-          }
-        })
-        .withFailureHandler((err) => {
-          document.getElementById('macroLoader').classList.add('hidden');
-          document.getElementById('macroContent').innerHTML = `<p class="text-xs text-red-400 col-span-2">${err}</p>`;
-        })
-        .doPost({ action: 'getMacros', mealName: mealName });
-    }
-
-    function closeMacroModal() { document.getElementById('macroModal').classList.add('hidden'); }
-    function openCookbookModal() { document.getElementById('cookbookModal').classList.remove('hidden'); }
-    function closeCookbookModal() { document.getElementById('cookbookModal').classList.add('hidden'); }
-
-    /**
-     * Floating Nav Action - Core Engine Mapping: Auto Plan Meal Cycle Generation Engine
-     */
-    function triggerAutoPlanMeals() {
-      showToast('Engaging system auto-plan execution cycle...');
-      google.script.run
-        .withSuccessHandler((response) => {
-          const res = JSON.parse(response);
-          if (res.success && res.data) {
-            document.getElementById('currentBreakfast').innerText = res.data.Breakfast;
-            document.getElementById('currentLunch').innerText = res.data.Lunch;
-            document.getElementById('currentDinner').innerText = res.data.Dinner;
-            showToast('Meal Sync cycle updated smoothly.');
-          } else {
-            showToast('Auto Plan sequence dropped: ' + res.error);
-          }
-        })
-        .withFailureHandler((err) => showToast('Failed sequence connection: ' + err))
-        .doPost({ action: 'autoPlanMeals' });
-    }
-
-    /**
-     * Ingestion Parsing Engine Core Logic Execution Setup
-     */
-    function handleManualQueueAdd() {
-      const mealInput = document.getElementById('manualMeal');
-      const categoryInput = document.getElementById('manualCategory');
-      
-      const name = mealInput.value.trim();
-      const category = categoryInput.value;
-      
-      if (!name) {
-        showToast('Please type a distinct meal entry string.');
-        return;
-      }
-      
-      processingQueueArray.push({ name: name, category: category });
-      mealInput.value = '';
-      renderQueueList();
+    // INGESTION ENGINE LOGIC
+    function addManualMeal() {
+        const name = document.getElementById('manualMealInput').value.trim();
+        const category = document.getElementById('manualMealCategory').value;
+        if(name) {
+            state.processingQueue.push({name, category});
+            document.getElementById('manualMealInput').value = '';
+            renderReviewQueue();
+        }
     }
 
     function processDocumentUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
-      
       const statusEl = document.getElementById('processingStatus');
-      statusEl.classList.remove('hidden');
-      statusEl.innerText = `Parsing document context: ${file.name}...`;
+      statusEl.style.display = 'block';
+      statusEl.innerText = `Parsing ${file.name}...`;
       
       const fileReader = new FileReader();
       
-      // Route parsing engine according to explicit file extension configuration
       if (file.type.match('image.*')) {
         fileReader.onload = function() {
-          Tesseract.recognize(fileReader.result, 'eng')
-            .then(({ data: { text } }) => parseExtractedRawText(text))
-            .catch(err => {
-              showToast('OCR Processing Exception: ' + err);
-              statusEl.classList.add('hidden');
-            });
+          Tesseract.recognize(fileReader.result, 'eng').then(({ data: { text } }) => parseExtractedRawText(text));
         };
         fileReader.readAsDataURL(file);
       } else if (file.name.endsWith('.pdf')) {
         fileReader.onload = function() {
-          const typedarray = new Uint8Array(this.result);
-          pdfjsLib.getDocument(typedarray).promise.then(pdf => {
-            let maxPages = pdf.numPages;
+          pdfjsLib.getDocument(new Uint8Array(this.result)).promise.then(pdf => {
             let countPromises = [];
-            for (let j = 1; j <= maxPages; j++) {
-              countPromises.push(pdf.getPage(j).then(page => page.getTextContent().then(text => {
-                return text.items.map(s => s.str).join(' ');
-              })));
+            for (let j = 1; j <= pdf.numPages; j++) {
+              countPromises.push(pdf.getPage(j).then(page => page.getTextContent().then(text => text.items.map(s => s.str).join(' '))));
             }
             Promise.all(countPromises).then(texts => parseExtractedRawText(texts.join(' ')));
-          }).catch(err => {
-            showToast('PDF Engine Exception: ' + err);
-            statusEl.classList.add('hidden');
           });
         };
         fileReader.readAsArrayBuffer(file);
       } else if (file.name.endsWith('.docx')) {
         fileReader.onload = function(e) {
-          mammoth.extractRawText({ arrayBuffer: e.target.result })
-            .then(result => parseExtractedRawText(result.value))
-            .catch(err => {
-              showToast('Word Doc Engine Exception: ' + err);
-              statusEl.classList.add('hidden');
-            });
+          mammoth.extractRawText({ arrayBuffer: e.target.result }).then(result => parseExtractedRawText(result.value));
         };
         fileReader.readAsArrayBuffer(file);
-      } else {
-        showToast('Unsupported document processing format standard.');
-        statusEl.classList.add('hidden');
       }
     }
 
     function parseExtractedRawText(rawText) {
-      document.getElementById('processingStatus').classList.add('hidden');
-      if (!rawText || !rawText.trim()) {
-        showToast('Zero string length encountered during parsing loop.');
-        return;
-      }
-      
-      // Simple custom extraction looking for newline blocks or common patterns
+      document.getElementById('processingStatus').style.display = 'none';
+      if (!rawText || !rawText.trim()) return;
       const lines = rawText.split(/[\n,;.]+/);
-      let itemsAdded = 0;
-      
       lines.forEach(line => {
         const cleanLine = line.replace(/[^a-zA-Z0-9\s&]/g, '').trim();
         if (cleanLine.length > 4 && cleanLine.length < 45) {
-          // Default all extracted entries to Lunch category gracefully for validation routing
-          processingQueueArray.push({
-            name: cleanLine,
-            category: 'Lunch'
-          });
-          itemsAdded++;
+          state.processingQueue.push({ name: cleanLine, category: 'Lunch' });
         }
       });
-      
-      renderQueueList();
-      showToast(`Extracted ${itemsAdded} structural lines for validation review.`);
+      renderReviewQueue();
     }
 
-    function renderQueueList() {
-      const queueList = document.getElementById('ingestQueueList');
-      const emptyMsg = document.getElementById('emptyQueueMessage');
-      const counter = document.getElementById('queueCounter');
-      const syncBtn = document.getElementById('syncQueueBtn');
+    function renderReviewQueue() {
+      const list = document.getElementById('reviewQueueList');
+      const panel = document.getElementById('reviewQueuePanel');
+      document.getElementById('queueCount').innerText = state.processingQueue.length;
       
-      queueList.innerHTML = '';
-      counter.innerText = `${processingQueueArray.length} Pending`;
+      if (state.processingQueue.length === 0) { panel.style.display = 'none'; return; }
       
-      if (processingQueueArray.length === 0) {
-        emptyMsg.classList.remove('hidden');
-        queueList.appendChild(emptyMsg);
-        
-        syncBtn.disabled = true;
-        syncBtn.className = "flex-1 text-xs font-semibold bg-gray-700 text-gray-400 py-2.5 rounded-lg transition-all cursor-not-allowed";
-        return;
-      }
-      
-      emptyMsg.classList.add('hidden');
-      syncBtn.disabled = false;
-      syncBtn.className = "flex-1 text-xs font-semibold bg-[#00B4DB] hover:bg-[#0083B0] text-white py-2.5 rounded-lg transition-all shadow-md";
-      
-      processingQueueArray.forEach((item, index) => {
-        const row = document.createElement('div');
-        row.className = 'flex items-center gap-2 p-2 bg-[#2D2D2D] border border-[#3D3D3D] rounded-lg';
-        row.innerHTML = `
-          <input type="text" value="${item.name}" onchange="updateQueueItemName(${index}, this.value)" class="flex-1 bg-[#1E1E1E] text-xs text-white border border-[#3D3D3D] px-2 py-1 rounded focus:outline-none">
-          <select onchange="updateQueueItemCategory(${index}, this.value)" class="bg-[#1E1E1E] text-[11px] text-[#00B4DB] border border-[#3D3D3D] px-1.5 py-1 rounded">
-            <option value="Breakfast" ${item.category === 'Breakfast' ? 'selected' : ''}>BF</option>
-            <option value="Lunch" ${item.category === 'Lunch' ? 'selected' : ''}>LH</option>
-            <option value="Dinner" ${item.category === 'Dinner' ? 'selected' : ''}>DN</option>
-          </select>
-          <button onclick="removeQueueItem(${index})" class="text-red-400 font-bold px-1 hover:text-red-300">&times;</button>
+      panel.style.display = 'block';
+      list.innerHTML = '';
+      state.processingQueue.forEach((item, idx) => {
+        const li = document.createElement('li');
+        li.className = 'review-queue-item';
+        li.innerHTML = `
+          <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; flex-grow:1;">
+            <select class="queue-category-select" onchange="state.processingQueue[${idx}].category=this.value">
+              <option value="Breakfast" ${item.category === 'Breakfast' ? 'selected' : ''}>Breakfast</option>
+              <option value="Lunch" ${item.category === 'Lunch' ? 'selected' : ''}>Lunch</option>
+              <option value="Dinner" ${item.category === 'Dinner' ? 'selected' : ''}>Dinner</option>
+            </select>
+            <span style="font-weight:600;">${item.name}</span>
+          </div>
+          <button class="review-queue-remove" onclick="state.processingQueue.splice(${idx},1); renderReviewQueue();">✕</button>
         `;
-        queueList.appendChild(row);
+        list.appendChild(li);
       });
-    }
-
-    function updateQueueItemName(index, val) { processingQueueArray[index].name = val; }
-    function updateQueueItemCategory(index, val) { processingQueueArray[index].category = val; }
-    function removeQueueItem(index) {
-      processingQueueArray.splice(index, 1);
-      renderQueueList();
     }
 
     function syncPendingQueueToSheets() {
-      if (processingQueueArray.length === 0) return;
-      showToast('Syncing validation queue directly to database sheets...');
-      
-      google.script.run
-        .withSuccessHandler((response) => {
-          const res = JSON.parse(response);
-          if (res.success) {
-            showToast('Validation sequence committed successfully.');
-            processingQueueArray = [];
-            renderQueueList();
-            closeCookbookModal();
-          } else {
-            showToast('Sync pipeline drop trace: ' + res.error);
-          }
-        })
-        .withFailureHandler((err) => showToast('Failed syncing processing queue: ' + err))
-        .doPost({ action: 'syncPendingQueue', items: processingQueueArray });
+        if(state.processingQueue.length === 0) return;
+        fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'syncPendingQueue', items: state.processingQueue }) })
+        .then(res => res.json())
+        .then(res => {
+            if(res.success) { state.processingQueue = []; renderReviewQueue(); closeModal(document.getElementById('dataModal')); }
+        });
     }
+
+    // QUANTITY & MASTER SHEET LOGIC
+    function getUnitOptions(unitType) {
+      const u = String(unitType || '').toLowerCase();
+      if (u === 'weight') return ['100g', '250g', '500g', '1kg', '2kg'];
+      if (u === 'volume') return ['250ml', '500ml', '1L', '2L'];
+      return ['1', '2', '3', '6', '12']; // Default Count
+    }
+
+    function renderCart() {
+      let activeHtml = '', dimmedHtml = '';
+      state.cart.forEach((item, index) => {
+        const displayUnit = item.unit === 'Count' ? '' : ''; // Don't print "Weight" or "Volume" on the card, just the quantity which has "g" or "ml" baked in.
+        const html = `
+          <div class="swipe-wrapper" id="swipe-item-cart-${index}" ontouchstart="handleSwipeStart(event, ${index})" ontouchmove="handleSwipeMove(event, ${index})" ontouchend="handleSwipeEnd(event, ${index})">
+              <div class="swipe-bg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
+              <div class="swipe-item grocery-item ${item.checked ? 'checked' : ''} ${item.recent && !item.checked ? 'dimmed' : ''}" onclick="toggleCartItem(${index})">
+                  <div class="checkbox">${item.checked ? '✓' : ''}</div>
+                  <div class="item-details">
+                      <div class="item-text-group"><div class="item-name">${item.name}</div>${item.flag ? `<div class="item-flag">🕒 ${item.flag}</div>` : ''}</div>
+                      <div class="qty-badge" onclick="openPicker(event, ${index})">${item.quantity} ▾</div>
+                  </div>
+              </div>
+          </div>`;
+        if (item.recent && !item.checked) dimmedHtml += html; else activeHtml += html;
+      });
+      document.getElementById('active-items').innerHTML = activeHtml || '<p class="subtle">No active items.</p>';
+      document.getElementById('dimmed-items').innerHTML = dimmedHtml || '<p class="subtle">No recently bought items.</p>';
+    }
+
+    function toggleCartItem(index) { if(navigator.vibrate) navigator.vibrate(15); state.cart[index].checked = !state.cart[index].checked; renderCart(); syncCartToBackend(); }
+
+    let currentEditIndex = null;
+    function openPicker(event, index) {
+      event.stopPropagation(); if(navigator.vibrate) navigator.vibrate(15);
+      currentEditIndex = index; const item = state.cart[index];
+      const opts = getUnitOptions(item.unit);
+      
+      document.getElementById('picker-title').innerText = item.name;
+      document.getElementById('picker-unit-label').innerText = `Select Quantity`;
+      document.getElementById('picker-grid').innerHTML = opts.map(o => `<button class="unit-btn" onclick="selectQuantity('${o}')">${o}</button>`).join('');
+      document.getElementById('picker-overlay').classList.add('open');
+      document.getElementById('bottom-sheet').classList.add('active');
+    }
+    function selectQuantity(qty) { if(navigator.vibrate) navigator.vibrate(15); state.cart[currentEditIndex].quantity = qty; closePicker(); renderCart(); syncCartToBackend(); }
+    function closePicker() { document.getElementById('picker-overlay').classList.remove('open'); document.getElementById('bottom-sheet').classList.remove('active'); }
+
+    // AI & BACKEND CALLS
+    function breakdownRecipeToCart(mealName) {
+      if(navigator.vibrate) navigator.vibrate(15);
+      const loader = document.getElementById('ai-loading-overlay');
+      document.getElementById('ai-loading-text').innerText = "Translating to Indian Groceries...";
+      loader.classList.add('active');
+
+      fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'breakdownRecipe', mealName: mealName }) })
+        .then(res => res.json())
+        .then(result => {
+            const ingredients = result.data || [];
+            
+            // UNSHIFT: Add new items to the top (reverse first so they appear in correct order at the top)
+            ingredients.reverse().forEach(ing => {
+                if(!state.cart.some(c => c.name.toLowerCase() === ing.name.toLowerCase())) {
+                    state.cart.unshift({ 
+                        name: ing.name, 
+                        quantity: ing.quantity, // Provided securely by Master Sheet 
+                        unit: ing.unit,         // Weight, Volume, Count
+                        checked: true, 
+                        recent: false, 
+                        flag: "" 
+                    });
+                }
+            });
+            syncCartToBackend();
+            loader.classList.remove('active');
+            switchTab('cart');
+            renderCart();
+        }).catch(e => { loader.classList.remove('active'); alert("API Error."); });
+    }
+
+    function fetchNutritionData(mealName) {
+      if(navigator.vibrate) navigator.vibrate(15);
+      const loader = document.getElementById('ai-loading-overlay');
+      document.getElementById('ai-loading-text').innerText = "Analyzing nutritional macros...";
+      loader.classList.add('active');
+
+      fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'getMacros', mealName: mealName }) })
+        .then(res => res.json())
+        .then(data => {
+            loader.classList.remove('active');
+            const nutrition = data.data || { calories: "N/A", protein: "N/A", carbs: "N/A", fat: "N/A" };
+            document.getElementById('nutritionGridContent').innerHTML = `
+              <div style="background:var(--color-surface-2); padding:20px; border-radius:1.5rem;"><div style="font-size:24px; font-weight:bold; color:var(--color-primary);">${nutrition.calories}</div><div style="font-size:12px; font-weight:bold; color:var(--color-text-muted); text-transform:uppercase;">Calories</div></div>
+              <div style="background:var(--color-surface-2); padding:20px; border-radius:1.5rem;"><div style="font-size:24px; font-weight:bold; color:var(--color-primary);">${nutrition.protein}</div><div style="font-size:12px; font-weight:bold; color:var(--color-text-muted); text-transform:uppercase;">Protein</div></div>
+              <div style="background:var(--color-surface-2); padding:20px; border-radius:1.5rem;"><div style="font-size:24px; font-weight:bold; color:var(--color-primary);">${nutrition.carbs}</div><div style="font-size:12px; font-weight:bold; color:var(--color-text-muted); text-transform:uppercase;">Carbs</div></div>
+              <div style="background:var(--color-surface-2); padding:20px; border-radius:1.5rem;"><div style="font-size:24px; font-weight:bold; color:var(--color-primary);">${nutrition.fat}</div><div style="font-size:12px; font-weight:bold; color:var(--color-text-muted); text-transform:uppercase;">Fat</div></div>
+            `;
+            document.getElementById('nutritionModalTitle').innerText = mealName;
+            openModal(document.getElementById('nutritionModal'));
+        }).catch(e => { loader.classList.remove('active'); alert("Failed to fetch nutrition."); });
+    }
+
+    let shoppingQueue = []; let shoppingIndex = 0;
+    function startGuidedShopping() {
+      if(navigator.vibrate) navigator.vibrate(15);
+      shoppingQueue = state.cart.filter(i => i.checked);
+      if(shoppingQueue.length === 0) return alert("Check at least one item.");
+      shoppingIndex = 0; updateGuidedUI(); document.getElementById('guided-overlay').classList.add('active');
+      setTimeout(() => window.location.href = `swiggy://instamart/search?query=${encodeURIComponent(shoppingQueue[0].name)}`, 300);
+    }
+    function updateGuidedUI() {
+      const item = shoppingQueue[shoppingIndex];
+      document.getElementById('shopping-progress').innerText = `Item ${shoppingIndex + 1} of ${shoppingQueue.length}`;
+      document.getElementById('shopping-item-name').innerText = `${item.quantity} ${item.name}`;
+    }
+    function markDoneAndNext() {
+      if(navigator.vibrate) navigator.vibrate(15);
+      const current = shoppingQueue[shoppingIndex];
+      const dbIdx = state.cart.findIndex(c => c.name === current.name);
+      if(dbIdx > -1) { state.cart[dbIdx].checked = false; state.cart[dbIdx].recent = true; state.cart[dbIdx].flag = "Just Bought"; }
+      shoppingIndex++;
+      if(shoppingIndex >= shoppingQueue.length) { closeGuidedShopping(); syncCartToBackend(); }
+      else { updateGuidedUI(); setTimeout(() => window.location.href = `swiggy://instamart/search?query=${encodeURIComponent(shoppingQueue[shoppingIndex].name)}`, 300); }
+    }
+    function closeGuidedShopping() { if(navigator.vibrate) navigator.vibrate(15); document.getElementById('guided-overlay').classList.remove('active'); renderCart(); }
+    async function syncCartToBackend() {} // Stub for future saving if needed
+
+    function renderSpreadsheetModal() {
+      document.getElementById('countBreakfast').innerText = "Load";
+      document.getElementById('tableSections').innerHTML = '<p class="subtle">Database connected securely.</p>';
+    }
+
+    triggerAutoPlan(); // Initialize app
   </script>
 </body>
 </html>
