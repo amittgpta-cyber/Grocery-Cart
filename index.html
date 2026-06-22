@@ -86,7 +86,6 @@
     .nav-item { color: var(--color-text-muted); font-weight: 600; padding: 12px 20px; border-radius: 30px; display: flex; align-items: center; gap: 6px; transition: 0.3s; }
     .nav-item.active { background: var(--color-primary); color: var(--color-bg); }
 
-    /* Cart Specific */
     .cart-tools { display: flex; gap: 10px; margin-bottom: 20px; }
     .cart-tools input { flex: 1; padding: 14px 20px; border-radius: 1.5rem; border: 1px solid var(--color-border); background: var(--color-surface); font-size: 1rem; color: var(--color-text); }
     .section-title { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--color-text-muted); font-weight: bold; margin: 24px 0 12px; }
@@ -99,23 +98,21 @@
     .item-name { font-size: 1.125rem; font-weight: 600; text-transform: capitalize; }
     .item-flag { font-size: 0.75rem; color: var(--color-warning); font-weight: 600; margin-top: 4px; }
     
-    /* Modals */
     .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 2000; }
     .modal.open { display: flex; }
     .dialog { background: var(--color-surface); width: 100%; max-width: 500px; max-height: 85vh; border-radius: 2rem; border: 1px solid var(--color-border); display: flex; flex-direction: column; overflow: hidden; }
     .dialog-head { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); flex-shrink: 0; }
     .dialog-body { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; }
     
-    /* Toast */
+    .fallback-banner { display: none; background: color-mix(in oklab, var(--color-warning) 15%, transparent); border: 1px solid var(--color-warning); color: var(--color-warning); padding: 15px; border-radius: 1.5rem; text-align: center; font-weight: bold; margin-bottom: 20px; cursor: pointer; }
+    
     .toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: var(--color-surface-2); border: 1px solid var(--color-border); padding: 12px 24px; border-radius: 2rem; font-weight: bold; z-index: 3000; transition: 0.3s var(--ease-spring); box-shadow: var(--shadow-md); color: var(--color-text); }
     .toast.show { top: 20px; }
 
-    /* Loaders */
     .loader { position: fixed; inset: 0; background: var(--color-bg); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { border: 4px solid var(--color-surface-2); border-top: 4px solid var(--color-primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
     
-    /* Guided Shopping Overlay */
     .guided-overlay { position: fixed; inset: 0; background: var(--color-bg); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; padding: 24px; text-align: center; }
     .guided-overlay.active { opacity: 1; pointer-events: auto; }
     .shopping-progress { color: var(--color-text-muted); font-size: 16px; margin-bottom: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
@@ -183,7 +180,8 @@
         
         <button class="ghost-btn" style="width: 100%; padding: 18px; margin-top: 12px; border-radius: 1.5rem;" onclick="repeatLastOrder()">↺ Repeat Last Staples</button>
         <div style="display:flex; gap:10px; margin-top:12px;">
-            <button class="primary-btn" style="flex: 1;" onclick="startGuidedShopping()">🛒 Order on Swiggy</button>
+            <button class="primary-btn" style="flex: 1; background: #fc8019;" onclick="startGuidedShopping('swiggy')">🛒 Swiggy</button>
+            <button class="primary-btn" style="flex: 1; background: #f8cb46; color: #000;" onclick="startGuidedShopping('blinkit')">🛒 Blinkit</button>
             <button class="ghost-btn" style="width: 60px; padding: 0;" onclick="shareCart()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg></button>
         </div>
       </div>
@@ -200,14 +198,9 @@
     <div class="shopping-progress" id="shopping-progress">Item 1 of X</div>
     <div class="shopping-item-name" id="shopping-item-name">Item Name</div>
     
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; width: 100%; max-width: 350px; margin-bottom: 20px;">
-        <button class="primary-btn" style="background:#fc8019; border-radius: 1.5rem;" onclick="openSwiggy()">Swiggy</button>
-        <button class="primary-btn" style="background:#f8cb46; color:#000; border-radius: 1.5rem;" onclick="openBlinkit()">Blinkit</button>
-    </div>
-    
     <div style="display:flex; flex-direction:column; gap:10px; width: 100%; max-width: 350px;">
         <button class="primary-btn" style="background:var(--color-success); border-radius: 1.5rem; padding: 18px;" onclick="markFoundAndNext()">✓ Found (Next)</button>
-        <button class="ghost-btn" style="border-radius: 1.5rem; padding: 18px;" onclick="markNotFoundAndNext()">✕ Not Found (Keep in list)</button>
+        <button class="ghost-btn" style="border-radius: 1.5rem; padding: 18px; border-color: var(--color-error); color: var(--color-error);" onclick="markNotFoundAndNext()">✕ Not Found (Keep in list)</button>
     </div>
   </div>
 
@@ -250,11 +243,14 @@
         <section id="dashboardView">
             <div style="background: var(--color-surface-2); padding: 1.5rem; border-radius: 2rem; border: 1px solid var(--color-border); margin-bottom: 20px;">
                 <h5 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: .12em; color: var(--color-primary); margin-bottom: 1.25rem;">Add Manual Entry</h5>
-                <div style="display: grid; gap: 10px;">
-                    <input class="ghost-btn" style="width: 100%; text-align: left; border-radius: 1.25rem; padding: 14px 20px;" id="unified-breakfast" placeholder="Breakfast item">
-                    <input class="ghost-btn" style="width: 100%; text-align: left; border-radius: 1.25rem; padding: 14px 20px;" id="unified-lunch" placeholder="Lunch item">
-                    <input class="ghost-btn" style="width: 100%; text-align: left; border-radius: 1.25rem; padding: 14px 20px;" id="unified-dinner" placeholder="Dinner item">
-                    <button class="primary-btn" style="border-radius: 1.5rem; padding: 14px;" onclick="queueUnifiedEntry()">Queue Entry</button>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input class="ghost-btn" style="flex: 2; text-align: left; border-radius: 1.25rem; padding: 14px 20px;" id="unified-meal-input" placeholder="Type meal name...">
+                    <select class="ghost-btn" style="flex: 1; border-radius: 1.25rem; padding: 14px;" id="unified-meal-category">
+                        <option value="breakfast">Breakfast</option>
+                        <option value="lunch">Lunch</option>
+                        <option value="dinner">Dinner</option>
+                    </select>
+                    <button class="primary-btn" style="border-radius: 1.25rem; padding: 14px 20px;" onclick="queueUnifiedEntry()">Add</button>
                 </div>
             </div>
             <div id="tableSections" style="display:grid; gap:10px;"></div>
@@ -321,7 +317,6 @@
 
     let pendingApprovals = []; let cachedGlobalVegMeals = null;
 
-    // Swipe Globals
     let touchStartX = 0; let currentTranslate = 0; let swipingId = null; let swipingContext = null;
     function handleSwipeStart(e, id, context) { touchStartX = e.touches[0].clientX; swipingId = id; swipingContext = context; const el = document.getElementById(`swipe-item-${id}`); if (el) el.classList.add('swiping'); }
     function handleSwipeMove(e, id) { if (swipingId !== id) return; const diff = e.touches[0].clientX - touchStartX; if (diff < 0) { currentTranslate = diff; const el = document.getElementById(`swipe-item-${id}`); if (el) el.style.transform = `translateX(${currentTranslate}px)`; } }
@@ -511,9 +506,8 @@
     function openModal(modal) { document.getElementById(modal).classList.add('open'); document.getElementById(modal).setAttribute('aria-hidden','false'); if(modal === 'dataModal') els.cookBookScrollArea.scrollTop = 0; }
     function closeModal(modal) { document.getElementById(modal).classList.remove('open'); document.getElementById(modal).setAttribute('aria-hidden','true'); }
 
-    // --- FALLBACK LOGIC ---
     function executeLocalFallback(mealName) {
-        showToast("Web Fetch Failed. Applying Smart Fallback.");
+        showToast("Applying Local Fallback...");
         const keywords = mealName.split(/\s+/).filter(w => w.length > 3);
         const trinity = ["Onions", "Tomatoes", "Green Chilies", "Ginger", "Garlic"];
         const combined = [...new Set([...keywords, ...trinity])];
@@ -528,45 +522,32 @@
 
     async function breakdownRecipeToCart(mealName) {
       if(navigator.vibrate) navigator.vibrate(15);
-      const loader = document.getElementById('mainLoader'); loader.style.display = 'flex'; loader.querySelector('h2').innerText = "AI Analyzing Recipe...";
+      const loader = document.getElementById('mainLoader'); loader.style.display = 'flex'; loader.querySelector('h2').innerText = "Analyzing Recipe...";
+      
       try {
         const res = await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'breakdownRecipe', mealName: mealName }) });
         const resultWrapper = await res.json();
-        const ingredients = resultWrapper.data || [];
-        if (!ingredients.length) throw new Error("Empty AI Response");
         
-        addIngredientsToCart(ingredients, "Ordered in last 7 days");
-        loader.style.display = 'none'; switchTab('cart', document.querySelectorAll('.nav-item')[1]);
-      } catch (e) {
-        // FAILSAFE 1: WEB FETCH
-        loader.querySelector('h2').innerText = "AI Failed. Fetching Web Recipe...";
-        try {
-            const webRes = await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'webFetchRecipe', mealName: mealName }) });
-            const webResultWrapper = await webRes.json();
-            const webIngredients = webResultWrapper.data || [];
-            if (!webIngredients.length) throw new Error("Web Fetch Failed");
-            
-            addIngredientsToCart(webIngredients, "Web Fetched");
-            loader.style.display = 'none'; showToast("Used Web Fetch Fallback."); switchTab('cart', document.querySelectorAll('.nav-item')[1]);
-        } catch(webErr) {
-            // FAILSAFE 2: LOCAL LOGIC
-            loader.style.display = 'none';
-            executeLocalFallback(mealName);
-            switchTab('cart', document.querySelectorAll('.nav-item')[1]);
-        }
-      }
-    }
-
-    function addIngredientsToCart(ingredients, recentFlagStr) {
+        if (resultWrapper.data && resultWrapper.data.error) { throw new Error(resultWrapper.data.error); }
+        
+        const ingredients = resultWrapper.data || [];
+        if (!ingredients.length) throw new Error("Empty Array Returned");
+        
         const now = new Date();
         const recentNames = state.orderHistory.filter(h => (now - new Date(h.date)) < 7*24*60*60*1000).map(h => h.item.toLowerCase());
+
         ingredients.reverse().forEach(ing => {
           const isRecent = recentNames.includes(ing.toLowerCase());
           if(!state.cart.some(c => c.name.toLowerCase() === ing.toLowerCase())) {
-            state.cart.unshift({ name: ing, checked: !isRecent, recent: isRecent, flag: isRecent ? recentFlagStr : "" });
+            state.cart.unshift({ name: ing, checked: !isRecent, recent: isRecent, flag: isRecent ? "Ordered in last 7 days" : "" });
           }
         });
-        syncCartToBackend();
+        syncCartToBackend(); loader.style.display = 'none'; switchTab('cart', document.querySelectorAll('.nav-item')[1]);
+      } catch (e) {
+        loader.style.display = 'none';
+        executeLocalFallback(mealName);
+        switchTab('cart', document.querySelectorAll('.nav-item')[1]);
+      }
     }
 
     function openMasterList() {
@@ -639,22 +620,29 @@
 
     function toggleCartItem(index) { if(navigator.vibrate) navigator.vibrate(15); state.cart[index].checked = !state.cart[index].checked; renderCart(); syncCartToBackend(); }
 
-    let shoppingQueue = []; let shoppingIndex = 0;
-    function startGuidedShopping() {
+    let shoppingQueue = []; let shoppingIndex = 0; let activePlatform = 'swiggy';
+    
+    function startGuidedShopping(platform) {
       if(navigator.vibrate) navigator.vibrate(15);
       shoppingQueue = state.cart.filter(i => i.checked);
       if(shoppingQueue.length === 0) return showToast("Check at least one item.");
-      shoppingIndex = 0; updateGuidedUI(); document.getElementById('guided-overlay').classList.add('active');
+      activePlatform = platform;
+      shoppingIndex = 0; updateGuidedUI(); 
+      document.getElementById('guided-overlay').classList.add('active');
+      launchPlatformLink();
     }
     
     function updateGuidedUI() {
       const item = shoppingQueue[shoppingIndex];
-      document.getElementById('shopping-progress').innerText = `Item ${shoppingIndex + 1} of ${shoppingQueue.length}`;
+      document.getElementById('shopping-progress').innerText = `Item ${shoppingIndex + 1} of ${shoppingQueue.length} (${activePlatform.toUpperCase()})`;
       document.getElementById('shopping-item-name').innerText = escapeHtml(item.name);
     }
     
-    function openSwiggy() { window.location.href = `swiggy://instamart/search?query=${encodeURIComponent(shoppingQueue[shoppingIndex].name)}`; }
-    function openBlinkit() { window.location.href = `blinkit://search?q=${encodeURIComponent(shoppingQueue[shoppingIndex].name)}`; }
+    function launchPlatformLink() {
+        const query = encodeURIComponent(shoppingQueue[shoppingIndex].name);
+        if (activePlatform === 'swiggy') { window.location.href = `swiggy://instamart/search?query=${query}`; }
+        else { window.location.href = `https://blinkit.com/s/?q=${query}`; }
+    }
     
     function markFoundAndNext() {
       if(navigator.vibrate) navigator.vibrate(15);
@@ -664,14 +652,14 @@
       fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'updateHistory', items: [current.name] }) }).catch(e=>e);
       shoppingIndex++;
       if(shoppingIndex >= shoppingQueue.length) { closeGuidedShopping(); syncCartToBackend(); showToast("Shopping Complete!"); }
-      else { updateGuidedUI(); }
+      else { updateGuidedUI(); launchPlatformLink(); }
     }
     
     function markNotFoundAndNext() {
       if(navigator.vibrate) navigator.vibrate(15);
       shoppingIndex++;
       if(shoppingIndex >= shoppingQueue.length) { closeGuidedShopping(); syncCartToBackend(); showToast("Shopping Complete. Skipped items kept in cart."); }
-      else { updateGuidedUI(); }
+      else { updateGuidedUI(); launchPlatformLink(); }
     }
     
     function closeGuidedShopping() { document.getElementById('guided-overlay').classList.remove('active'); renderCart(); }
@@ -708,28 +696,54 @@
     }
 
     function queueUnifiedEntry() {
-        const b = document.getElementById('unified-breakfast').value.trim();
-        const l = document.getElementById('unified-lunch').value.trim();
-        const d = document.getElementById('unified-dinner').value.trim();
-        let queued = false;
-        if (b) { pendingApprovals.push({ category: 'breakfast', meal: b }); queued = true; }
-        if (l) { pendingApprovals.push({ category: 'lunch', meal: l }); queued = true; }
-        if (d) { pendingApprovals.push({ category: 'dinner', meal: d }); queued = true; }
-        
-        if (queued) {
-            document.getElementById('unified-breakfast').value = '';
-            document.getElementById('unified-lunch').value = '';
-            document.getElementById('unified-dinner').value = '';
-            renderReviewQueue();
-            showToast("Added to queue.");
+        const mealName = document.getElementById('unified-meal-input').value.trim();
+        const category = document.getElementById('unified-meal-category').value;
+        if (mealName) { 
+            pendingApprovals.push({ category: category, meal: mealName }); 
+            document.getElementById('unified-meal-input').value = ''; 
+            renderReviewQueue(); showToast("Added to queue."); 
         }
+    }
+
+    async function processFile(event) {
+        const file = event.target.files[0]; if (!file) return;
+        const statusEl = document.getElementById('uploadStatus');
+        statusEl.innerText = "Scanning document..."; showToast("Processing upload...");
+        
+        try {
+            const ext = file.name.split('.').pop().toLowerCase();
+            let rawText = '';
+            
+            if (['jpg', 'jpeg', 'png', 'webp'].includes(ext) || file.type.startsWith('image/')) {
+                const result = await Tesseract.recognize(file, 'eng');
+                rawText = result.data.text;
+            } else if (ext === 'pdf') {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    rawText += textContent.items.map(s => s.str).join(' ') + '\n';
+                }
+            } else if (ext === 'docx') {
+                const arrayBuffer = await file.arrayBuffer();
+                const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                rawText = result.value;
+            } else { throw new Error("Unsupported format"); }
+            
+            const matches = rawText.split('\n').map(line => line.trim()).filter(line => line.length > 3 && line.length < 50);
+            if (matches.length > 0) {
+                matches.slice(0, 10).forEach(m => pendingApprovals.push({ category: 'dinner', meal: m }));
+                renderReviewQueue(); statusEl.innerText = `Scanned ${matches.slice(0, 10).length} items. Assign categories below.`;
+            } else { statusEl.innerText = "No clear meals found in document."; }
+        } catch(e) { statusEl.innerText = "Scan failed. Ensure file is clear text."; }
+        event.target.value = '';
     }
 
     async function submitQueueForApproval() {
       if (pendingApprovals.length === 0) return;
       const btn = document.getElementById('submitApprovalBtn');
-      const originalText = btn.innerHTML;
-      btn.innerHTML = `Syncing...`;
+      const originalText = btn.innerHTML; btn.innerHTML = `Syncing...`;
       try {
         const response = await fetch(GOOGLE_SHEETS_API_URL, { 
           method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
