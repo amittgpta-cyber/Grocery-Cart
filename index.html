@@ -80,7 +80,8 @@
     
     .explore-area { display: flex; justify-content: space-around; max-height: 0; opacity: 0; overflow: hidden; transition: 0.3s; margin-top: -10px; }
     .explore-area.open { max-height: 100px; opacity: 1; margin-top: 5px; padding: 10px 0; border-top: 1px solid var(--color-divider); }
-    .explore-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--color-surface); border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; }
+    .explore-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--color-surface); border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .explore-icon:active { transform: scale(0.9); }
     
     .empty { padding: 3rem 2rem; background: var(--color-surface); border-radius: 2rem; border: 1px solid var(--color-border); color: var(--color-text-muted); }
     .empty h3 { color: var(--color-text); font-family: var(--font-display); font-size: 2rem; margin-bottom: 0.5rem; }
@@ -289,6 +290,20 @@
     });
 
     const state = { db: { breakfast: [], lunch: [], dinner: [] }, cookingHistory: [], currentSuggestions: [], masterGrocery: [], orderHistory: [], cart: [] };
+    
+    // DEFINING ELS OBJECT TO FIX REFERENCE ERROR
+    const els = {
+      suggestions: document.getElementById('suggestions'),
+      counts: { breakfast: document.getElementById('countBreakfast'), lunch: document.getElementById('countLunch'), dinner: document.getElementById('countDinner') },
+      dataModal: document.getElementById('dataModal'),
+      fridgeModal: document.getElementById('fridgeModal'),
+      uploadStatus: document.getElementById('uploadStatus'),
+      tableSections: document.getElementById('tableSections'),
+      reviewQueuePanel: document.getElementById('reviewQueuePanel'),
+      reviewQueueList: document.getElementById('reviewQueueList'),
+      cookBookScrollArea: document.getElementById('cookBookScrollArea')
+    };
+
     let pendingApprovals = []; let cachedGlobalVegMeals = null; let currentFallbackMeal = ""; let fetchedWebIngredients = [];
 
     function showToast(msg) {
@@ -406,6 +421,42 @@
       renderOutputDeck([ buildCard('Breakfast', b, 'db'), buildCard('Lunch', l, 'db'), buildCard('Dinner', d, 'db') ]);
     }
 
+    async function refreshSpecificCategoryCard(index, direction = 'next') {
+      const card = state.currentSuggestions[index]; if (!card || card.isLocked) return;
+      if (direction === 'next' && card.source === 'internet') {
+        const newMealName = await fetchSurpriseMeal();
+        card.history.push(newMealName); card.historyIndex++; card.name = newMealName; card.cookedRecently = !!cookedWithinAWeek(newMealName);
+        updateSingleCard(index); return;
+      }
+      if (direction === 'prev') {
+        if (card.historyIndex > 0) { card.historyIndex--; card.name = card.history[card.historyIndex]; card.cookedRecently = !!cookedWithinAWeek(card.name); updateSingleCard(index); }
+        return;
+      }
+      if (card.historyIndex < card.history.length - 1) {
+        card.historyIndex++; card.name = card.history[card.historyIndex]; card.cookedRecently = !!cookedWithinAWeek(card.name); updateSingleCard(index); return;
+      }
+      const cleanKey = card.time.replace(/^[^a-zA-Z]+/, '').trim().split(' ')[0].toLowerCase();
+      const used = state.currentSuggestions.filter((_, i) => i !== index).map(i => i.name);
+      let newMealName = pickUniqueMeal(state.db[cleanKey], used);
+      card.history.push(newMealName); card.historyIndex++; card.name = newMealName; card.cookedRecently = !!cookedWithinAWeek(newMealName);
+      updateSingleCard(index);
+    }
+
+    function updateSingleCard(index) {
+      const article = els.suggestions.children[index]; if (!article) return;
+      const item = state.currentSuggestions[index];
+      article.className = 'meal-card' + (item.isLocked ? ' locked' : '');
+      article.style.animation = 'none';
+      article.innerHTML = getCardInnerHTML(item, index);
+    }
+
+    function lockChoiceIntoExclusionMemory(index) {
+      const card = state.currentSuggestions[index]; if (!card) return;
+      card.isLocked = !card.isLocked;
+      if (card.isLocked) logSingleMealSelection(card.name, card.time.split(' ')[0]);
+      updateSingleCard(index);
+    }
+
     async function runFridgeMatchingPipeline() {
       const raw = document.getElementById('fridgeIngredientsInput').value.trim(); if (!raw) return;
       const items = raw.toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
@@ -478,9 +529,7 @@
     function applyWebFetch() {
         const selected = [];
         fetchedWebIngredients.forEach((ing, i) => { if(document.getElementById(`wf-${i}`).checked) selected.push(ing); });
-        // Clear fallback guesses (items flagged as "Fallback Guess")
         state.cart = state.cart.filter(c => c.flag !== "Fallback Guess");
-        // Add new verified items
         selected.reverse().forEach(ing => {
             if(!state.cart.some(c => c.name.toLowerCase() === ing.toLowerCase())) state.cart.unshift({ name: ing, checked: true, recent: false, flag: "Web Fetched" });
         });
@@ -492,7 +541,7 @@
     async function breakdownRecipeToCart(mealName) {
       if(navigator.vibrate) navigator.vibrate(15);
       const loader = document.getElementById('mainLoader'); loader.style.display = 'flex'; loader.querySelector('h2').innerText = "Analyzing Recipe...";
-      document.getElementById('fallbackBanner').style.display = 'none'; // reset
+      document.getElementById('fallbackBanner').style.display = 'none'; 
       try {
         const res = await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'breakdownRecipe', mealName: mealName }) });
         const resultWrapper = await res.json();
@@ -668,7 +717,7 @@
     });
 
     async function loadFromGoogleSheets() {
-      if (!GOOGLE_SHEETS_API_URL || GOOGLE_SHEETS_API_URL.includes("PASTE")) return;
+      if (!GOOGLE_SHEETS_API_URL || GOOGLE_SHEETS_API_URL.includes("PASTE")) { dedupeDb(); refreshCounts(); renderOutputDeck([]); renderSpreadsheetModal(); return; }
       try {
         const res = await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'getAllData' }) });
         const resultWrapper = await res.json(); const data = resultWrapper.data;
