@@ -74,13 +74,13 @@
     .icon-circle { width: 44px; height: 44px; border-radius: 50%; background: var(--color-surface-2); display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); cursor: pointer; transition: 0.2s; }
     .icon-circle.active { background: color-mix(in oklab, var(--color-success) 20%, transparent); color: var(--color-success); border-color: var(--color-success); }
     .nav-buttons-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-    .card-action { min-height: 52px; font-weight: 600; border: 1px solid var(--color-border); border-radius: 1.25rem; background: var(--color-surface-2); color: var(--color-text); display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .card-action { min-height: 52px; font-weight: 600; border: 1px solid var(--color-border); border-radius: 1.25rem; background: var(--color-surface-2); color: var(--color-text); display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0.5rem 1rem; }
     .card-action.locked { background: var(--color-success); color: var(--color-bg); border-color: var(--color-success); }
     .card-action:disabled { opacity: 0.4; cursor: not-allowed; }
     
-    .explore-area { display: flex; justify-content: space-around; max-height: 0; opacity: 0; overflow: hidden; transition: 0.3s; margin-top: -10px; }
+    .explore-area { display: flex; justify-content: space-around; align-items: center; max-height: 0; opacity: 0; overflow: hidden; transition: 0.3s; margin-top: -10px; }
     .explore-area.open { max-height: 100px; opacity: 1; margin-top: 5px; padding: 10px 0; border-top: 1px solid var(--color-divider); }
-    .explore-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--color-surface); border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .explore-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--color-surface); border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
     .explore-icon:active { transform: scale(0.9); }
     
     .empty { padding: 3rem 2rem; background: var(--color-surface); border-radius: 2rem; border: 1px solid var(--color-border); color: var(--color-text-muted); }
@@ -108,13 +108,11 @@
     .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 2000; }
     .modal.open { display: flex; }
     .dialog { background: var(--color-surface); width: 100%; max-width: 500px; max-height: 85vh; border-radius: 2rem; border: 1px solid var(--color-border); display: flex; flex-direction: column; overflow: hidden; }
-    .dialog-head { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); }
+    .dialog-head { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); flex-shrink: 0; }
     .dialog-body { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
     
     .fallback-banner { display: none; background: color-mix(in oklab, var(--color-warning) 15%, transparent); border: 1px solid var(--color-warning); color: var(--color-warning); padding: 15px; border-radius: 1.5rem; text-align: center; font-weight: bold; margin-bottom: 20px; cursor: pointer; }
-    .ai-strip { padding: 1rem; background: color-mix(in oklab, var(--color-secondary) 10%, transparent); border: 1px solid color-mix(in oklab, var(--color-secondary) 20%, transparent); border-radius: 1.5rem; margin: 1.5rem 0; }
-    .ai-pill { background: var(--color-surface); border: 1px solid var(--color-border); padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.875rem; font-weight: 600; white-space: nowrap; cursor: pointer; }
-
+    
     /* Toast */
     .toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: var(--color-surface-2); border: 1px solid var(--color-border); padding: 12px 24px; border-radius: 2rem; font-weight: bold; z-index: 3000; transition: 0.3s var(--ease-spring); box-shadow: var(--shadow-md); }
     .toast.show { top: 20px; }
@@ -126,6 +124,7 @@
     .review-queue-list { list-style: none; display: grid; gap: 10px; }
     .review-queue-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--color-surface-2); border-radius: 1rem; }
     .review-queue-item select { background: var(--color-surface); padding: 5px; border-radius: 0.5rem; border: 1px solid var(--color-border); }
+    .data-row { display: flex; justify-content: space-between; gap: 0.75rem; align-items: center; padding: 1rem 1.5rem; border: 1px solid var(--color-border); border-radius: 1.25rem; background: var(--color-surface); font-size: 1rem; margin-bottom: 8px;}
   </style>
 </head>
 <body>
@@ -190,7 +189,7 @@
         <button class="ghost-btn" style="width: 100%; padding: 18px; margin-top: 12px; border-radius: 1.5rem;" onclick="repeatLastOrder()">↺ Repeat Last Staples</button>
         <div style="display:flex; gap:10px; margin-top:12px;">
             <button class="primary-btn" style="flex: 1;" onclick="startGuidedShopping()">🛒 Order on Swiggy</button>
-            <button class="ghost-btn" style="width: 60px; padding: 0;" onclick="shareCart()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+            <button class="ghost-btn" style="width: 60px; padding: 0;" onclick="shareCart()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg></button>
         </div>
       </div>
     </main>
@@ -204,12 +203,12 @@
   <div class="modal" id="masterListModal">
     <section class="dialog">
       <div class="dialog-head">
-        <h4>Master Groceries</h4>
+        <h4 style="font-family: var(--font-display); font-size: 1.5rem;">Master Groceries</h4>
         <button class="icon-btn" style="border-radius: 50%;" onclick="closeModal('masterListModal')">✕</button>
       </div>
       <div class="dialog-body">
         <div style="display:flex; gap:8px;">
-           <input id="newMasterInput" class="ghost-btn" style="flex:1; padding: 12px; border-radius: 1.5rem;" placeholder="New item...">
+           <input id="newMasterInput" class="ghost-btn" style="flex:1; padding: 12px; border-radius: 1.5rem; text-align: left;" placeholder="New item...">
            <button class="primary-btn" style="border-radius:1.5rem; padding:0 20px;" onclick="addManualMasterItem()">+</button>
         </div>
         <h5 style="color:var(--color-primary); font-size:12px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">Last Bought</h5><div id="ml-last-bought"></div>
@@ -222,28 +221,45 @@
   <div class="modal" id="dataModal">
     <section class="dialog">
       <div class="dialog-head">
-        <h4>CookBook</h4>
+        <h4 style="font-family: var(--font-display); font-size: 1.5rem;">CookBook</h4>
         <button class="icon-btn" style="border-radius: 50%;" onclick="closeModal('dataModal')">✕</button>
       </div>
-      <div class="dialog-body">
+      <div class="dialog-body" id="cookBookScrollArea">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <label class="ghost-btn" style="flex-direction:column; padding:20px; border-radius:1.5rem; border:1px dashed var(--color-border); cursor:pointer;">📄 Document <input type="file" style="display:none" onchange="processFile(event)"></label>
-          <label class="ghost-btn" style="flex-direction:column; padding:20px; border-radius:1.5rem; border:1px dashed var(--color-border); cursor:pointer;">📷 Scan <input type="file" style="display:none" capture="environment" onchange="processFile(event)"></label>
+          <label class="ghost-btn" style="flex-direction:column; padding:20px; border-radius:1.5rem; border:1px dashed var(--color-border); cursor:pointer;">📄 Document <input type="file" style="display:none" accept=".pdf,.docx,.xlsx,.xls,image/*" onchange="processFile(event)"></label>
+          <label class="ghost-btn" style="flex-direction:column; padding:20px; border-radius:1.5rem; border:1px dashed var(--color-border); cursor:pointer;">📷 Scan <input type="file" style="display:none" accept="image/*" capture="environment" onchange="processFile(event)"></label>
         </div>
+        <div id="uploadStatus" style="color: var(--color-primary); text-align: center; font-weight: bold;"></div>
+        
         <div id="reviewQueuePanel" style="display:none; padding:15px; background:var(--color-surface-2); border-radius:1.5rem; border:1px solid var(--color-success);">
-           <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h5 style="color:var(--color-success); font-weight:bold;">Queue</h5><button onclick="submitQueueForApproval()" style="color:var(--color-success); font-weight:bold;">Sync to DB</button></div>
+           <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h5 style="color:var(--color-success); font-weight:bold;">Pending Queue</h5><button onclick="submitQueueForApproval()" id="submitApprovalBtn" style="color:var(--color-success); font-weight:bold;">Sync to DB</button></div>
            <ul class="review-queue-list" id="reviewQueueList"></ul>
         </div>
-        <div id="tableSections" style="display:grid; gap:10px;"></div>
+        
+        <section id="dashboardView">
+            <div style="background: var(--color-surface-2); padding: 1.5rem; border-radius: 2rem; border: 1px solid var(--color-border); margin-bottom: 20px;">
+                <h5 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: .12em; color: var(--color-primary); margin-bottom: 1.25rem;">Add Manual Entry</h5>
+                <div style="display: grid; gap: 10px;">
+                    <input class="ghost-btn" style="width: 100%; text-align: left; border-radius: 1.25rem; padding: 14px 20px;" id="unified-breakfast" placeholder="Breakfast item">
+                    <input class="ghost-btn" style="width: 100%; text-align: left; border-radius: 1.25rem; padding: 14px 20px;" id="unified-lunch" placeholder="Lunch item">
+                    <input class="ghost-btn" style="width: 100%; text-align: left; border-radius: 1.25rem; padding: 14px 20px;" id="unified-dinner" placeholder="Dinner item">
+                    <button class="primary-btn" style="border-radius: 1.5rem; padding: 14px;" onclick="queueUnifiedEntry()">Queue Entry</button>
+                </div>
+            </div>
+            <div id="tableSections" style="display:grid; gap:10px;"></div>
+        </section>
       </div>
     </section>
   </div>
 
   <div class="modal" id="fridgeModal">
-    <section class="dialog">
-      <div class="dialog-head"><h4>Fridge Match</h4><button class="icon-btn" style="border-radius: 50%;" onclick="closeModal('fridgeModal')">✕</button></div>
+    <section class="dialog small">
+      <div class="dialog-head">
+          <h4 style="font-family: var(--font-display); font-size: 1.5rem;">Fridge Match</h4>
+          <button class="icon-btn" style="border-radius: 50%;" onclick="closeModal('fridgeModal')">✕</button>
+      </div>
       <div class="dialog-body">
-        <input id="fridgeIngredientsInput" class="ghost-btn" style="width:100%; text-align:left; border-radius:1.5rem;" placeholder="Paneer, tomato..." />
+        <input id="fridgeIngredientsInput" class="ghost-btn" style="width:100%; padding: 14px; text-align:left; border-radius:1.5rem;" placeholder="Paneer, tomato..." />
         <button class="primary-btn" style="border-radius: 1.5rem;" onclick="runFridgeMatchingPipeline()">Find Meals</button>
       </div>
     </section>
@@ -251,7 +267,10 @@
   
   <div class="modal" id="webFetchModal">
     <section class="dialog">
-      <div class="dialog-head"><h4>Web Fetch Recipe</h4><button class="icon-btn" style="border-radius: 50%;" onclick="closeModal('webFetchModal')">✕</button></div>
+      <div class="dialog-head">
+          <h4 style="font-family: var(--font-display); font-size: 1.5rem;">Web Fetch Recipe</h4>
+          <button class="icon-btn" style="border-radius: 50%;" onclick="closeModal('webFetchModal')">✕</button>
+      </div>
       <div class="dialog-body">
         <p class="subtle" id="webFetchStatus">Fetching exact ingredients from the internet...</p>
         <div id="webFetchList" style="display:grid; gap:10px;"></div>
@@ -261,6 +280,17 @@
   </div>
 
   <script>
+    // Utilities
+    function escapeHtml(str) { 
+      return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); 
+    }
+    
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg; t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
     let lastScrollY = window.scrollY;
     const bottomNav = document.getElementById('bottomNav');
     window.addEventListener('scroll', () => {
@@ -291,7 +321,6 @@
 
     const state = { db: { breakfast: [], lunch: [], dinner: [] }, cookingHistory: [], currentSuggestions: [], masterGrocery: [], orderHistory: [], cart: [] };
     
-    // DEFINING ELS OBJECT TO FIX REFERENCE ERROR
     const els = {
       suggestions: document.getElementById('suggestions'),
       counts: { breakfast: document.getElementById('countBreakfast'), lunch: document.getElementById('countLunch'), dinner: document.getElementById('countDinner') },
@@ -305,12 +334,6 @@
     };
 
     let pendingApprovals = []; let cachedGlobalVegMeals = null; let currentFallbackMeal = ""; let fetchedWebIngredients = [];
-
-    function showToast(msg) {
-        const t = document.getElementById('toast');
-        t.innerText = msg; t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 3000);
-    }
 
     // Swipe Globals
     let touchStartX = 0; let currentTranslate = 0; let swipingId = null; let swipingContext = null;
@@ -386,39 +409,56 @@
             <div class="card-header-left"><span class="eyebrow">${item.time}</span><span class="badge ${tag.cls}">${tag.text}</span>${item.cookedRecently ? '<span class="badge warning">Cooked recently</span>' : ''}</div>
             <div class="top-actions"><div class="icon-circle" data-action="add-to-cart" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg></div>${bookmarkHTML}</div>
         </div>
-        <div class="meal-title">${item.name}</div>
+        <div class="meal-title">${escapeHtml(item.name)}</div>
         <div class="nav-buttons-row">
             <button class="card-action" data-action="prev" data-index="${index}" ${item.historyIndex > 0 && !item.isLocked ? '' : 'disabled'}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg></button>
             <button class="card-action ${item.isLocked ? 'locked' : ''}" data-action="lock" data-index="${index}">${item.isLocked ? '✓' : 'Order Up!'}</button>
-            <button class="card-action" data-action="toggle-explore" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></button>
+            <button class="card-action" data-action="toggle-explore" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
             <button class="card-action" data-action="next" data-index="${index}" ${item.isLocked ? 'disabled' : ''}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg></button>
         </div>
         <div id="explore-${index}" class="explore-area">
           <button class="explore-icon" data-action="google" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 24c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 21.53 7.7 24 12 24z"/><path fill="#FBBC05" d="M5.84 15.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V8.06H2.18C1.43 9.55 1 11.22 1 13s.43 3.45 1.18 4.94l3.66-2.84z"/><path fill="#EA4335" d="M12 4.84c1.61 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.63 14.97 0 12 0 7.7 0 3.99 2.47 2.18 6.06l3.66 2.84c.87-2.6 3.3-4.06 6.16-4.06z"/></svg></button>
           <button class="explore-icon" data-action="youtube" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#FF0000" d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg></button>
           <button class="explore-icon" data-action="nutrition" data-index="${index}"><span style="font-size:1.2rem;">💪</span></button>
-          <button class="explore-icon" data-action="internet" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></button>
+          <button class="explore-icon" data-action="internet" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4M21 7H3M7 21l-4-4 4-4M3 17h18"/></svg></button>
+          <button class="explore-icon" data-action="whatsapp" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg></button>
         </div>
       `;
     }
 
     function renderOutputDeck(schema) {
       state.currentSuggestions = structuredClone(schema);
-      const s = document.getElementById('suggestions'); s.innerHTML = '';
+      const s = els.suggestions; s.innerHTML = '';
       if (!schema.length) { s.innerHTML = `<div class="empty"><h3>Ready to Plan?</h3><p class="subtle">Generate balanced meal options or find ingredient fallbacks.</p></div>`; return; }
       schema.forEach((item, index) => {
         const article = document.createElement('article');
         article.className = 'meal-card' + (item.isLocked ? ' locked' : '');
+        article.style.animationDelay = `${index * 0.1}s`;
         article.innerHTML = getCardInnerHTML(item, index);
         s.appendChild(article);
       });
     }
 
     function generateDefaultSuggestions() {
-      const b = state.db.breakfast.length ? state.db.breakfast[Math.floor(Math.random() * state.db.breakfast.length)] : 'Idli';
-      const l = state.db.lunch.length ? state.db.lunch[Math.floor(Math.random() * state.db.lunch.length)] : 'Dal Rice';
-      const d = state.db.dinner.length ? state.db.dinner[Math.floor(Math.random() * state.db.dinner.length)] : 'Khichdi';
+      const used = [];
+      const b = pickUniqueMeal(state.db.breakfast, used); used.push(b);
+      const l = pickUniqueMeal(state.db.lunch, used); used.push(l);
+      const d = pickUniqueMeal(state.db.dinner, used);
       renderOutputDeck([ buildCard('Breakfast', b, 'db'), buildCard('Lunch', l, 'db'), buildCard('Dinner', d, 'db') ]);
+    }
+
+    function pickUniqueMeal(categoryArr, excludedNames = []) {
+      const pool = categoryArr && categoryArr.length ? categoryArr : ['No meals added'];
+      const excluded = new Set(excludedNames.map(v => String(v).toLowerCase()));
+      const uniquePool = pool.filter(m => !excluded.has(String(m).toLowerCase()));
+      const source = uniquePool.length ? uniquePool : pool;
+      return source[Math.floor(Math.random() * source.length)];
+    }
+
+    function logSingleMealSelection(mealName, timeOfDay) { 
+        if (!mealName || mealName === 'No meals added') return; 
+        state.cookingHistory.push({ time: timeOfDay, name: mealName, timestamp: Date.now() }); 
+        if (state.cookingHistory.length > 120) state.cookingHistory.shift(); 
     }
 
     async function refreshSpecificCategoryCard(index, direction = 'next') {
@@ -674,6 +714,83 @@
       try { await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'syncCart', cart: state.cart }) }); } catch(e) {}
     }
 
+    function queueUnifiedEntry() {
+        const b = document.getElementById('unified-breakfast').value.trim();
+        const l = document.getElementById('unified-lunch').value.trim();
+        const d = document.getElementById('unified-dinner').value.trim();
+        let queued = false;
+        if (b) { pendingApprovals.push({ category: 'breakfast', meal: b }); queued = true; }
+        if (l) { pendingApprovals.push({ category: 'lunch', meal: l }); queued = true; }
+        if (d) { pendingApprovals.push({ category: 'dinner', meal: d }); queued = true; }
+        
+        if (queued) {
+            document.getElementById('unified-breakfast').value = '';
+            document.getElementById('unified-lunch').value = '';
+            document.getElementById('unified-dinner').value = '';
+            renderReviewQueue();
+            showToast("Added to queue.");
+        }
+    }
+
+    async function submitQueueForApproval() {
+      if (pendingApprovals.length === 0) return;
+      const btn = document.getElementById('submitApprovalBtn');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `Syncing...`;
+      try {
+        const response = await fetch(GOOGLE_SHEETS_API_URL, { 
+          method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'sync_meals', data: JSON.stringify(pendingApprovals) }) 
+        });
+        const resultWrapper = await response.json();
+        if (resultWrapper.success) {
+            pendingApprovals.forEach(item => state.db[item.category].push(item.meal));
+            dedupeDb(); refreshCounts(); renderSpreadsheetModal();
+            pendingApprovals = []; renderReviewQueue(); renderOutputDeck(state.currentSuggestions); 
+            btn.innerHTML = "✓ Synced"; setTimeout(() => btn.innerHTML = originalText, 2000);
+        } else throw new Error();
+      } catch (err) { btn.innerHTML = originalText; alert('Sync failed.'); }
+    }
+
+    function renderSpreadsheetModal() {
+      refreshCounts();
+      els.tableSections.innerHTML = '';
+      ['breakfast','lunch','dinner'].forEach(category => {
+        const section = document.createElement('section'); section.className = 'panel data-section'; section.setAttribute('data-section', category);
+        const title = document.createElement('h5'); title.textContent = `${category.toUpperCase()} · ${state.db[category].length}`; section.appendChild(title);
+        if (!state.db[category].length) section.innerHTML += `<p class="subtle">No meals found.</p>`;
+        else state.db[category].forEach((item) => section.innerHTML += `<div class="data-row"><span>${escapeHtml(item)}</span></div>`);
+        els.tableSections.appendChild(section);
+      });
+    }
+
+    function dedupeDb() { for (const key of ['breakfast','lunch','dinner']) state.db[key] = [...new Set(state.db[key].map(v => String(v || '').trim()).filter(Boolean))]; }
+    function refreshCounts() { els.counts.breakfast.textContent = state.db.breakfast.length; els.counts.lunch.textContent = state.db.lunch.length; els.counts.dinner.textContent = state.db.dinner.length; }
+
+    function renderReviewQueue() {
+      els.reviewQueueList.innerHTML = '';
+      if (pendingApprovals.length === 0) { els.reviewQueuePanel.style.display = 'none'; return; }
+      els.reviewQueuePanel.style.display = 'block';
+      pendingApprovals.forEach((item, idx) => {
+        const li = document.createElement('li'); li.className = 'review-queue-item';
+        li.innerHTML = `
+          <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; flex-grow:1;">
+            <select class="queue-category-select" data-queue-index="${idx}">
+              <option value="breakfast" ${item.category === 'breakfast' ? 'selected' : ''}>Breakfast</option>
+              <option value="lunch" ${item.category === 'lunch' ? 'selected' : ''}>Lunch</option>
+              <option value="dinner" ${item.category === 'dinner' ? 'selected' : ''}>Dinner</option>
+            </select>
+            <span style="font-weight:600; font-family:var(--font-display); font-size:1.25rem;">${escapeHtml(item.meal)}</span>
+          </div>
+          <button class="review-queue-remove" style="color:var(--color-error); background:none;" data-remove-queue="${idx}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        `;
+        els.reviewQueueList.appendChild(li);
+      });
+    }
+
+    document.addEventListener('change', e => { if (e.target.classList.contains('queue-category-select')) pendingApprovals[Number(e.target.dataset.queueIndex)].category = e.target.value; });
+    document.addEventListener('click', e => { const rmBtn = e.target.closest('[data-remove-queue]'); if (rmBtn) { pendingApprovals.splice(Number(rmBtn.dataset.removeQueue), 1); renderReviewQueue(); renderOutputDeck(state.currentSuggestions); } });
+
     document.getElementById('generateBtn').addEventListener('click', generateDefaultSuggestions);
     
     document.getElementById('surpriseBtn').addEventListener('click', async function() {
@@ -684,7 +801,7 @@
     
     document.getElementById('fridgeBtn').addEventListener('click', () => openModal('fridgeModal'));
 
-    document.getElementById('openDataBtn').addEventListener('click', () => { openModal('dataModal'); document.getElementById('tableSections').innerHTML = ''; });
+    document.getElementById('openDataBtn').addEventListener('click', () => { openModal('dataModal'); });
     
     els.suggestions.addEventListener('click', async event => {
       const btn = event.target.closest('[data-action]'); if (!btn) return;
@@ -707,6 +824,13 @@
       if (action === 'nutrition') window.open(`https://www.google.com/search?q=${encodeURIComponent(card.name + ' nutrition')}`, '_blank');
       if (action === 'add-to-cart') breakdownRecipeToCart(card.name);
       if (action === 'internet') window.open(`https://www.google.com/search?q=${encodeURIComponent(card.name + ' alternatives')}`, '_blank');
+      if (action === 'whatsapp') {
+         const mealName = card.name;
+         const googleLink = `https://www.google.com/search?q=${encodeURIComponent(mealName + ' recipe')}`;
+         const ytLink = `https://www.youtube.com/results?search_query=${encodeURIComponent(mealName + ' recipe')}`;
+         const text = `🍽️ *${mealName}*\n\n🔍 *Google Recipe:*\n${googleLink}\n\n📺 *YouTube Recipe:*\n${ytLink}`;
+         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+      }
       if (action === 'toggle-queue') {
         const category = card.time.replace(/^[^a-zA-Z]+/, '').trim().split(' ')[0].toLowerCase();
         const qIndex = pendingApprovals.findIndex(m => m.category === category && m.meal === card.name);
