@@ -1,4 +1,3 @@
-<!-- Index.html -->
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -99,10 +98,10 @@
     .card-action.locked { background: var(--color-success) !important; color: var(--color-bg) !important; border-color: var(--color-success) !important; }
     .main-actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; padding: 0 1.5rem 1.5rem; }
     
-    .explore-area { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 0.75rem; padding: 0 1.5rem; max-height: 0; opacity: 0; margin-top: -0.5rem; transition: all 0.4s var(--ease-spring); border-top: 1px solid transparent; }
+    .explore-area { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 0.75rem; padding: 0 1.5rem; max-height: 0; opacity: 0; margin-top: -0.5rem; transition: all 0.4s var(--ease-spring); border-top: 1px solid transparent; justify-content: space-between; }
     .explore-area::-webkit-scrollbar { display: none; }
     .explore-area.open { max-height: 120px; opacity: 1; border-top-color: var(--color-divider); padding-top: 1.5rem; padding-bottom: 1.5rem; margin-top: 0; }
-    .explore-area .card-action { flex-shrink: 0; min-height: 48px; border-radius: 2rem; font-size: 0.9rem; padding: 0.5rem 1.25rem; white-space: nowrap; }
+    .explore-area .card-action { flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; }
     
     .empty { padding: 3rem 2rem; text-align: left; background: var(--color-surface); border-radius: var(--radius-2xl); border: 1px solid var(--color-border); color: var(--color-text-muted); font-size: 1.125rem; }
     .empty h3 { color: var(--color-text); margin-bottom: 0.5rem; font-family: var(--font-display); font-size: 2rem; line-height: 1.1; letter-spacing: -0.02em; }
@@ -404,8 +403,29 @@
     }
 
     function deleteCartItem(index) { if(navigator.vibrate) navigator.vibrate(15); state.cart.splice(index, 1); renderCart(); syncCartToBackend(); }
-    function deleteMasterItem(name) { if(navigator.vibrate) navigator.vibrate(15); state.masterGrocery = state.masterGrocery.filter(i => i.name !== name); openMasterList(); fetch(GOOGLE_SHEETS_API_URL, { method:'POST', body: JSON.stringify({action:'deleteMasterItem', item: name}) }); }
-    function addManualMasterItem() { const val = document.getElementById('newMasterInput').value.trim(); if(val) { state.masterGrocery.push({name: val, freq: 1}); document.getElementById('newMasterInput').value = ''; openMasterList(); fetch(GOOGLE_SHEETS_API_URL, { method:'POST', body: JSON.stringify({action:'addMasterItem', item: val}) }); } }
+    
+    function deleteMasterItem(name) { 
+      if(navigator.vibrate) navigator.vibrate(15); 
+      state.masterGrocery = state.masterGrocery.filter(i => i.name !== name); 
+      openMasterList(); 
+      fetch(GOOGLE_SHEETS_API_URL, { 
+        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+        body: JSON.stringify({ action: 'deleteMasterItem', item: name }) 
+      }); 
+    }
+    
+    function addManualMasterItem() { 
+      const val = document.getElementById('newMasterInput').value.trim(); 
+      if(val) { 
+        state.masterGrocery.push({name: val, freq: 1}); 
+        document.getElementById('newMasterInput').value = ''; 
+        openMasterList(); 
+        fetch(GOOGLE_SHEETS_API_URL, { 
+          method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+          body: JSON.stringify({ action: 'addMasterItem', item: val }) 
+        }); 
+      } 
+    }
 
     function getMealTag(name) {
       const low = String(name || '').toLowerCase();
@@ -465,10 +485,13 @@
       if (pendingApprovals.length === 0) return;
       const btn = document.getElementById('submitApprovalBtn'); const originalText = btn.innerHTML; btn.innerHTML = `Syncing...`;
       try {
-        const url = new URL(GOOGLE_SHEETS_API_URL); url.searchParams.append('action', 'sync_meals'); url.searchParams.append('data', JSON.stringify(pendingApprovals));
-        const response = await fetch(url.toString(), { method: 'POST', body: JSON.stringify({ action: 'sync_meals', data: JSON.stringify(pendingApprovals) }) });
-        const result = await response.json();
-        if (result.success) {
+        const response = await fetch(GOOGLE_SHEETS_API_URL, { 
+          method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'sync_meals', data: JSON.stringify(pendingApprovals) }) 
+        });
+        const resultWrapper = await response.json();
+        const result = resultWrapper.data;
+        if (resultWrapper.success) {
             pendingApprovals.forEach(item => state.db[item.category].push(item.meal));
             dedupeDb(); refreshCounts(); renderSpreadsheetModal();
             pendingApprovals = []; renderReviewQueue(); renderOutputDeck(state.currentSuggestions); 
@@ -493,7 +516,7 @@
 
     function getCardInnerHTML(item, index) {
       const tag = getMealTag(item.name); let bookmarkHTML = '';
-      if (item.source !== 'db') {
+      if (item.source === 'internet') {
          const category = item.time.replace(/^[^a-zA-Z]+/, '').trim().split(' ')[0].toLowerCase();
          const normalized = normalizeSuggestionToMealName(item.name);
          const isQueued = pendingApprovals.some(m => m.category === category && m.meal.toLowerCase() === normalized.toLowerCase());
@@ -521,11 +544,11 @@
           <button class="card-action" type="button" data-action="toggle-explore" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> Explore</button>
         </div>
         <div id="explore-${index}" class="explore-area">
-          <button class="card-action" data-action="google" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" style="margin-right:4px;"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 24c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 21.53 7.7 24 12 24z"/><path fill="#FBBC05" d="M5.84 15.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V8.06H2.18C1.43 9.55 1 11.22 1 13s.43 3.45 1.18 4.94l3.66-2.84z"/><path fill="#EA4335" d="M12 4.84c1.61 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.63 14.97 0 12 0 7.7 0 3.99 2.47 2.18 6.06l3.66 2.84c.87-2.6 3.3-4.06 6.16-4.06z"/></svg> Google</button>
-          <button class="card-action" data-action="youtube" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" style="margin-right:4px;"><path fill="#FF0000" d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg> YouTube</button>
-          <button class="card-action" style="color:var(--color-success);" data-action="nutrition" data-index="${index}"><span style="font-size:1.2rem; margin-right:4px;">💪</span> Health</button>
-          <button class="card-action" data-action="internet" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Similar</button>
-          <button class="card-action" style="color:var(--color-bg); background:var(--color-success);" data-action="whatsapp" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> WhatsApp</button>
+          <button class="card-action" data-action="google" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 24c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 21.53 7.7 24 12 24z"/><path fill="#FBBC05" d="M5.84 15.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V8.06H2.18C1.43 9.55 1 11.22 1 13s.43 3.45 1.18 4.94l3.66-2.84z"/><path fill="#EA4335" d="M12 4.84c1.61 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.63 14.97 0 12 0 7.7 0 3.99 2.47 2.18 6.06l3.66 2.84c.87-2.6 3.3-4.06 6.16-4.06z"/></svg></button>
+          <button class="card-action" data-action="youtube" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#FF0000" d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg></button>
+          <button class="card-action" style="color:var(--color-success);" data-action="nutrition" data-index="${index}"><span style="font-size:1.2rem;">💪</span></button>
+          <button class="card-action" data-action="internet" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg></button>
+          <button class="card-action" data-action="whatsapp" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
         </div>
       `;
     }
@@ -599,16 +622,16 @@
       
       closeModal(els.fridgeModal);
 
-      const searchQ = encodeURIComponent(`${items.join(' ')} recipes`);
-      window.open(`https://www.google.com/search?q=${searchQ}`, '_blank', 'noopener,noreferrer');
-      window.open(`https://www.youtube.com/results?search_query=${searchQ}`, '_blank', 'noopener,noreferrer');
-
       const deck = [];
       if (bMatches.length > 0) deck.push(buildCard('Breakfast', bMatches[Math.floor(Math.random() * bMatches.length)], 'db'));
       if (lMatches.length > 0) deck.push(buildCard('Lunch', lMatches[Math.floor(Math.random() * lMatches.length)], 'db'));
       if (dMatches.length > 0) deck.push(buildCard('Dinner', dMatches[Math.floor(Math.random() * dMatches.length)], 'db'));
 
-      if (deck.length > 0) { renderOutputDeck(deck); } else {
+      if (deck.length > 0) { 
+        renderOutputDeck(deck); 
+      } else {
+         const searchQ = encodeURIComponent(`${items.join(' ')} recipes`);
+         window.open(`https://www.google.com/search?q=${searchQ}`, '_blank', 'noopener,noreferrer');
          els.suggestions.innerHTML = `
           <div class="empty" style="border-color: var(--color-success);">
             <h3 style="color: var(--color-success);">Internet Search Triggered!</h3>
@@ -642,9 +665,12 @@
       loader.classList.add('active');
 
       try {
-        const res = await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'breakdownRecipe', mealName: mealName }) });
-        const result = await res.json();
-        const ingredients = result.data || [];
+        const res = await fetch(GOOGLE_SHEETS_API_URL, { 
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'breakdownRecipe', mealName: mealName }) 
+        });
+        const resultWrapper = await res.json();
+        const ingredients = resultWrapper.data || [];
         
         const now = new Date();
         const recentNames = state.orderHistory.filter(h => (now - new Date(h.date)) < 7*24*60*60*1000).map(h => h.item.toLowerCase());
@@ -816,7 +842,10 @@
       const dbIdx = state.cart.findIndex(c => c.name.toLowerCase() === current.name.toLowerCase());
       if(dbIdx > -1) { state.cart[dbIdx].checked = false; state.cart[dbIdx].recent = true; state.cart[dbIdx].flag = "Just Bought"; }
       
-      fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateHistory', items: [current.name] }) }).catch(e=>e);
+      fetch(GOOGLE_SHEETS_API_URL, { 
+        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'updateHistory', items: [current.name] }) 
+      }).catch(e=>e);
       
       shoppingIndex++;
       if(shoppingIndex >= shoppingQueue.length) { closeGuidedShopping(); syncCartToBackend(); }
@@ -826,7 +855,7 @@
 
     async function syncCartToBackend() {
       if(!GOOGLE_SHEETS_API_URL || GOOGLE_SHEETS_API_URL.includes("PASTE")) return;
-      try { await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'syncCart', cart: state.cart }) }); } catch(e) {}
+      try { await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'syncCart', cart: state.cart }) }); } catch(e) {}
     }
 
     document.getElementById('generateBtn').addEventListener('click', generateDefaultSuggestions);
@@ -885,7 +914,7 @@
          const mealName = card.name;
          const googleLink = `https://www.google.com/search?q=${encodeURIComponent(mealName + ' recipe')}`;
          const ytLink = `https://www.youtube.com/results?search_query=${encodeURIComponent(mealName + ' recipe')}`;
-         const text = `*${mealName}*\n\nGoogle Recipe:\n${googleLink}\n\nYouTube Recipe:\n${ytLink}`;
+         const text = `🍽️ *${mealName}*\n\n🔍 *Google Recipe:*\n${googleLink}\n\n📺 *YouTube Recipe:*\n${ytLink}`;
          window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
       }
 
@@ -919,8 +948,13 @@
     async function loadFromGoogleSheets() {
       if (!GOOGLE_SHEETS_API_URL || GOOGLE_SHEETS_API_URL.includes("PASTE")) { dedupeDb(); refreshCounts(); renderOutputDeck([]); renderSpreadsheetModal(); return; }
       try {
-        const res = await fetch(`${GOOGLE_SHEETS_API_URL}?action=getAllData`);
-        const data = await res.json();
+        const res = await fetch(GOOGLE_SHEETS_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'getAllData' })
+        });
+        const resultWrapper = await res.json();
+        const data = resultWrapper.data;
         if (data.breakfast) state.db.breakfast = data.breakfast;
         if (data.lunch) state.db.lunch = data.lunch;
         if (data.dinner) state.db.dinner = data.dinner;
@@ -929,7 +963,7 @@
         if (data.cart) state.cart = data.cart;
         
         dedupeDb(); refreshCounts(); renderSpreadsheetModal();
-        els.suggestions.innerHTML = `<div class="empty"><h3>Ready to Plan?</h3><p class="subtle">Generate balanced meal options, search nutrition quickly, and find ingredient-based fallbacks online.</p></div>`;
+        generateDefaultSuggestions();
       } catch (e) {
         dedupeDb(); refreshCounts(); renderSpreadsheetModal();
         els.suggestions.innerHTML = '<div class="empty"><h3>Loaded offline database (Google Sheet sync failed).</h3></div>';
