@@ -243,14 +243,14 @@
         <section id="dashboardView">
             <div style="background: var(--color-surface-2); padding: 1.5rem; border-radius: 2rem; border: 1px solid var(--color-border); margin-bottom: 20px;">
                 <h5 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: .12em; color: var(--color-primary); margin-bottom: 1.25rem;">Add Manual Entry</h5>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <input class="ghost-btn" style="flex: 2; text-align: left; border-radius: 1.25rem; padding: 14px 20px;" id="unified-meal-input" placeholder="Type meal name...">
-                    <select class="ghost-btn" style="flex: 1; border-radius: 1.25rem; padding: 14px;" id="unified-meal-category">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input class="ghost-btn" style="flex: 1; text-align: left; border-radius: 1.25rem; padding: 14px 16px; min-width: 0;" id="unified-meal-input" placeholder="Type meal name...">
+                    <select class="ghost-btn" style="border-radius: 1.25rem; padding: 14px 8px; min-width: 0;" id="unified-meal-category">
                         <option value="breakfast">Breakfast</option>
                         <option value="lunch">Lunch</option>
                         <option value="dinner">Dinner</option>
                     </select>
-                    <button class="primary-btn" style="border-radius: 1.25rem; padding: 14px 20px;" onclick="queueUnifiedEntry()">Add</button>
+                    <button class="primary-btn" style="border-radius: 1.25rem; padding: 0 20px; height: 48px; flex-shrink: 0;" onclick="queueUnifiedEntry()">+</button>
                 </div>
             </div>
             <div id="tableSections" style="display:grid; gap:10px;"></div>
@@ -394,8 +394,8 @@
             <button class="card-action" data-action="next" data-index="${index}" ${item.isLocked ? 'disabled' : ''}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg></button>
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button class="card-action" data-action="toggle-explore" data-index="${index}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
             <button class="card-action ${item.isLocked ? 'locked' : ''}" data-action="lock" data-index="${index}">${item.isLocked ? '✓' : 'Order Up!'}</button>
+            <button class="card-action" data-action="toggle-explore" data-index="${index}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
         </div>
 
         <div id="explore-${index}" class="explore-area">
@@ -669,25 +669,7 @@
         const activeItems = state.cart.filter(c => c.checked).map(c => c.name);
         if (!activeItems.length) return showToast("Nothing to share!");
         const textList = "🛒 *MealSync Grocery List:*\n" + activeItems.map(i => "• " + i).join("\n");
-        try {
-            const canvas = document.createElement('canvas');
-            canvas.width = 800; canvas.height = 140 + (activeItems.length * 45);
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#121110'; ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = '#80c7d2'; ctx.font = 'bold 44px sans-serif';
-            ctx.fillText('MealSync Grocery List', 40, 80);
-            ctx.fillStyle = '#e8e6e3'; ctx.font = '32px sans-serif';
-            activeItems.forEach((item, i) => ctx.fillText(`• ${item}`, 40, 150 + (i * 45)));
-            
-            canvas.toBlob(async (blob) => {
-                const file = new File([blob], 'grocery-list.png', { type: 'image/png' });
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({ title: 'Grocery List', text: textList, files: [file] });
-                } else throw new Error("Fallback");
-            });
-        } catch (e) {
-            window.open(`https://wa.me/?text=${encodeURIComponent(textList)}`, '_blank');
-        }
+        window.open(`https://wa.me/?text=${encodeURIComponent(textList)}`, '_blank');
     }
 
     async function syncCartToBackend() {
@@ -825,7 +807,6 @@
       if (action === 'youtube') window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(card.name + ' recipe')}`, '_blank');
       if (action === 'nutrition') window.open(`https://www.google.com/search?q=${encodeURIComponent(card.name + ' nutrition')}`, '_blank');
       if (action === 'add-to-cart') breakdownRecipeToCart(card.name);
-      if (action === 'internet') window.open(`https://www.google.com/search?q=${encodeURIComponent(card.name + ' alternatives')}`, '_blank');
       if (action === 'whatsapp') {
          const mealName = card.name;
          const googleLink = `https://www.google.com/search?q=${encodeURIComponent(mealName + ' recipe')}`;
