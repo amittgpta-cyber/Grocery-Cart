@@ -36,12 +36,6 @@
     .brand-logo { width: 2.75rem; height: 2.75rem; border-radius: 1rem; display: grid; place-items: center; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: #000; font-weight: bold; }
     h1 { font-family: var(--font-display); font-size: 1.75rem; font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
     
-    .ai-toggle-strip { display: flex; align-items: center; justify-content: flex-end; gap: 10px; font-size: 0.875rem; font-weight: 600; color: var(--color-text-muted); }
-    .toggle-switch { position: relative; width: 44px; height: 24px; background: var(--color-surface-offset); border-radius: 12px; cursor: pointer; border: 1px solid var(--color-border); transition: 0.3s; }
-    .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: var(--color-text-muted); border-radius: 50%; transition: 0.3s var(--ease-spring); }
-    .toggle-switch.active { background: color-mix(in oklab, var(--color-primary) 20%, transparent); border-color: var(--color-primary); }
-    .toggle-switch.active::after { transform: translateX(20px); background: var(--color-primary); }
-
     .header-actions { display: flex; gap: 0.5rem; align-items: center; }
     .icon-btn, .ghost-btn, .primary-btn, .accent-btn { border-radius: 2rem; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; transition: 0.2s; padding: 0.75rem 1.5rem; }
     .icon-btn { width: 52px; padding: 0; border: 1px solid var(--color-border); background: var(--color-surface); }
@@ -50,13 +44,14 @@
     .accent-btn { background: var(--color-secondary); color: var(--color-bg); }
     button:active { transform: scale(0.95); }
 
-    .shell { max-width: 70rem; margin: 0 auto; padding: 9rem 1rem 8rem; }
+    .shell { max-width: 70rem; margin: 0 auto; padding: 7rem 1rem 8rem; }
     .page { display: none; animation: fadePeek 0.4s var(--ease-spring); }
     .page.active { display: block; }
     @keyframes fadePeek { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
     .stats { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; }
-    .stat { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem 0; background: var(--color-surface); border-radius: 1.5rem; border: 1px solid var(--color-border); cursor: pointer; }
+    .stat { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem 0; background: var(--color-surface); border-radius: 1.5rem; border: 1px solid var(--color-border); cursor: pointer; transition: 0.2s; }
+    .stat:active { transform: scale(0.95); }
     .stat strong { font-size: 1.5rem; font-family: var(--font-display); }
     .stat .subtle { font-size: 0.7rem; text-transform: uppercase; font-weight: 700; }
     .action-row { display: flex; gap: 10px; margin-bottom: 2rem; flex-wrap: wrap; }
@@ -74,7 +69,7 @@
     .icon-circle { width: 44px; height: 44px; border-radius: 50%; background: var(--color-surface-2); display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); cursor: pointer; transition: 0.2s; color: var(--color-text); }
     .icon-circle.active { background: color-mix(in oklab, var(--color-success) 20%, transparent); color: var(--color-success); border-color: var(--color-success); }
     
-    .card-action { min-height: 52px; font-weight: 600; border: 1px solid var(--color-border); border-radius: 1.25rem; background: var(--color-surface-2); color: var(--color-text); display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0.5rem 1rem; }
+    .card-action { min-height: 52px; font-weight: 600; border: 1px solid var(--color-border); border-radius: 1.25rem; background: var(--color-surface-2); color: var(--color-text); display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0.5rem 1rem; transition: 0.2s; }
     .card-action.locked { background: var(--color-success); color: var(--color-bg); border-color: var(--color-success); }
     .card-action:disabled { opacity: 0.4; cursor: not-allowed; }
     
@@ -109,17 +104,23 @@
     .modal.open { display: flex; }
     .dialog { background: var(--color-surface); width: 100%; max-width: 500px; max-height: 85vh; border-radius: 2rem; border: 1px solid var(--color-border); display: flex; flex-direction: column; overflow: hidden; }
     .dialog-head { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); flex-shrink: 0; }
-    .dialog-body { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-    
-    .fallback-banner { display: none; background: color-mix(in oklab, var(--color-warning) 15%, transparent); border: 1px solid var(--color-warning); color: var(--color-warning); padding: 15px; border-radius: 1.5rem; text-align: center; font-weight: bold; margin-bottom: 20px; cursor: pointer; }
+    .dialog-body { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; }
     
     /* Toast */
     .toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: var(--color-surface-2); border: 1px solid var(--color-border); padding: 12px 24px; border-radius: 2rem; font-weight: bold; z-index: 3000; transition: 0.3s var(--ease-spring); box-shadow: var(--shadow-md); color: var(--color-text); }
     .toast.show { top: 20px; }
 
+    /* Loaders */
     .loader { position: fixed; inset: 0; background: var(--color-bg); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { border: 4px solid var(--color-surface-2); border-top: 4px solid var(--color-primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
+    
+    /* Guided Shopping Overlay */
+    .guided-overlay { position: fixed; inset: 0; background: var(--color-bg); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; padding: 24px; text-align: center; }
+    .guided-overlay.active { opacity: 1; pointer-events: auto; }
+    .shopping-progress { color: var(--color-text-muted); font-size: 16px; margin-bottom: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .shopping-item-name { font-size: 36px; font-weight: bold; margin-bottom: 48px; color: var(--color-text); text-transform: capitalize; font-family: var(--font-display); }
+    .close-shopping { position: absolute; top: 40px; right: 24px; font-size: 24px; color: var(--color-text-muted); background: none; border: none; cursor: pointer; }
     
     .review-queue-list { list-style: none; display: grid; gap: 10px; margin: 0; padding: 0; }
     .review-queue-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--color-surface-2); border-radius: 1rem; }
@@ -138,10 +139,6 @@
         <button class="icon-btn" data-theme-toggle><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
         <button class="ghost-btn" id="openDataBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> CookBook</button>
       </div>
-    </div>
-    <div class="ai-toggle-strip">
-      <span>🤖 AI Chef Mode</span>
-      <div class="toggle-switch" id="aiToggle"></div>
     </div>
   </div>
 
@@ -174,8 +171,6 @@
           <input id="manualCartAdd" placeholder="Add an item...">
           <button class="primary-btn" style="border-radius: 1.5rem; padding: 0 20px;" onclick="addManualCartItem()">+</button>
         </div>
-        
-        <div id="fallbackBanner" class="fallback-banner" onclick="openWebFetchModal()">🤖 AI Offline: Tap to fetch exact recipe from Web</div>
 
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div class="section-title">Ready to Buy</div>
@@ -198,6 +193,22 @@
   <div class="bottom-nav" id="bottomNav">
     <button class="nav-item active" onclick="switchTab('plan', this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Plan</button>
     <button class="nav-item" onclick="switchTab('cart', this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> Cart</button>
+  </div>
+
+  <div class="guided-overlay" id="guided-overlay">
+    <button class="close-shopping" onclick="closeGuidedShopping()">✕</button>
+    <div class="shopping-progress" id="shopping-progress">Item 1 of X</div>
+    <div class="shopping-item-name" id="shopping-item-name">Item Name</div>
+    
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; width: 100%; max-width: 350px; margin-bottom: 20px;">
+        <button class="primary-btn" style="background:#fc8019; border-radius: 1.5rem;" onclick="openSwiggy()">Swiggy</button>
+        <button class="primary-btn" style="background:#f8cb46; color:#000; border-radius: 1.5rem;" onclick="openBlinkit()">Blinkit</button>
+    </div>
+    
+    <div style="display:flex; flex-direction:column; gap:10px; width: 100%; max-width: 350px;">
+        <button class="primary-btn" style="background:var(--color-success); border-radius: 1.5rem; padding: 18px;" onclick="markFoundAndNext()">✓ Found (Next)</button>
+        <button class="ghost-btn" style="border-radius: 1.5rem; padding: 18px;" onclick="markNotFoundAndNext()">✕ Not Found (Keep in list)</button>
+    </div>
   </div>
 
   <div class="modal" id="masterListModal">
@@ -260,27 +271,12 @@
       </div>
       <div class="dialog-body">
         <input id="fridgeIngredientsInput" class="ghost-btn" style="width:100%; padding: 14px; text-align:left; border-radius:1.5rem;" placeholder="Paneer, tomato..." />
-        <button class="primary-btn" style="border-radius: 1.5rem;" onclick="runFridgeMatchingPipeline()">Find Meals</button>
-      </div>
-    </section>
-  </div>
-  
-  <div class="modal" id="webFetchModal">
-    <section class="dialog">
-      <div class="dialog-head">
-          <h4 style="font-family: var(--font-display); font-size: 1.5rem;">Web Fetch Recipe</h4>
-          <button class="icon-btn" style="border-radius: 50%;" onclick="closeModal('webFetchModal')">✕</button>
-      </div>
-      <div class="dialog-body">
-        <p class="subtle" id="webFetchStatus">Fetching exact ingredients from the internet...</p>
-        <div id="webFetchList" style="display:grid; gap:10px;"></div>
-        <button class="primary-btn" style="border-radius: 1.5rem; display:none;" id="applyWebFetchBtn" onclick="applyWebFetch()">Apply to Cart</button>
+        <button class="primary-btn" style="border-radius: 1.5rem; padding: 14px;" onclick="runFridgeMatchingPipeline()">Find Meals</button>
       </div>
     </section>
   </div>
 
   <script>
-    // Utilities
     function escapeHtml(str) { return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
     function showToast(msg) {
         const t = document.getElementById('toast');
@@ -309,13 +305,6 @@
       themeBtn.addEventListener('click', () => { theme = theme === 'dark' ? 'light' : 'dark'; root.setAttribute('data-theme', theme); renderThemeIcon(); });
     })();
 
-    let aiMode = false;
-    document.getElementById('aiToggle').addEventListener('click', function() {
-        aiMode = !aiMode;
-        this.classList.toggle('active');
-        showToast(aiMode ? "🤖 AI Mode Activated" : "⚡ Speed Mode Activated");
-    });
-
     const state = { db: { breakfast: [], lunch: [], dinner: [] }, cookingHistory: [], currentSuggestions: [], masterGrocery: [], orderHistory: [], cart: [] };
     
     const els = {
@@ -330,7 +319,7 @@
       cookBookScrollArea: document.getElementById('cookBookScrollArea')
     };
 
-    let pendingApprovals = []; let cachedGlobalVegMeals = null; let currentFallbackMeal = ""; let fetchedWebIngredients = [];
+    let pendingApprovals = []; let cachedGlobalVegMeals = null;
 
     // Swipe Globals
     let touchStartX = 0; let currentTranslate = 0; let swipingId = null; let swipingContext = null;
@@ -354,13 +343,7 @@
     }
     
     function deleteMasterItem(name) { if(navigator.vibrate) navigator.vibrate(15); state.masterGrocery = state.masterGrocery.filter(i => i.name !== name); openMasterList(); fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'deleteMasterItem', item: name }) }); }
-    function addManualMasterItem() { 
-        const val = document.getElementById('newMasterInput').value.trim(); 
-        if(val) { 
-            if(state.masterGrocery.some(m => m.name.toLowerCase() === val.toLowerCase())) { showToast("Already in Master List!"); return; }
-            state.masterGrocery.push({name: val, freq: 1}); document.getElementById('newMasterInput').value = ''; openMasterList(); fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'addMasterItem', item: val }) }); 
-        } 
-    }
+    function addManualMasterItem() { const val = document.getElementById('newMasterInput').value.trim(); if(val) { if(state.masterGrocery.some(m => m.name.toLowerCase() === val.toLowerCase())) { showToast("Already in Master List!"); return; } state.masterGrocery.push({name: val, freq: 1}); document.getElementById('newMasterInput').value = ''; openMasterList(); fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'addMasterItem', item: val }) }); } }
 
     function getMealTag(name) {
       const low = String(name || '').toLowerCase();
@@ -382,7 +365,7 @@
       document.querySelectorAll('.page, .nav-item').forEach(el => el.classList.remove('active'));
       document.getElementById(`page-${tabId}`).classList.add('active');
       btn.classList.add('active');
-      if(tabId === 'cart') { document.getElementById('openDataBtn').style.display = 'none'; document.querySelector('.ai-toggle-strip').style.display = 'none'; renderCart(); } else { document.getElementById('openDataBtn').style.display = 'flex'; document.querySelector('.ai-toggle-strip').style.display = 'flex'; }
+      if(tabId === 'cart') { document.getElementById('openDataBtn').style.display = 'none'; renderCart(); } else { document.getElementById('openDataBtn').style.display = 'flex'; }
     }
 
     function cookedWithinAWeek(mealName) { 
@@ -424,7 +407,6 @@
           <button class="explore-icon" data-action="google" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 24c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 21.53 7.7 24 12 24z"/><path fill="#FBBC05" d="M5.84 15.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V8.06H2.18C1.43 9.55 1 11.22 1 13s.43 3.45 1.18 4.94l3.66-2.84z"/><path fill="#EA4335" d="M12 4.84c1.61 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.63 14.97 0 12 0 7.7 0 3.99 2.47 2.18 6.06l3.66 2.84c.87-2.6 3.3-4.06 6.16-4.06z"/></svg></button>
           <button class="explore-icon" data-action="youtube" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#FF0000" d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg></button>
           <button class="explore-icon" data-action="nutrition" data-index="${index}"><span style="font-size:1.2rem;">💪</span></button>
-          <button class="explore-icon" data-action="internet" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4M21 7H3M7 21l-4-4 4-4M3 17h18"/></svg></button>
           <button class="explore-icon" data-action="whatsapp" data-index="${index}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg></button>
         </div>
       `;
@@ -502,26 +484,16 @@
     async function runFridgeMatchingPipeline() {
       const raw = document.getElementById('fridgeIngredientsInput').value.trim(); if (!raw) return;
       const items = raw.toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
+      const findMatches = pool => pool.filter(meal => items.some(ingredient => meal.toLowerCase().includes(ingredient)));
+      
+      const bMatches = findMatches(state.db.breakfast); const lMatches = findMatches(state.db.lunch); const dMatches = findMatches(state.db.dinner);
       closeModal('fridgeModal');
 
-      if (aiMode) {
-          document.getElementById('mainLoader').style.display = 'flex';
-          document.getElementById('mainLoader').querySelector('h2').innerText = "AI Chef Creating...";
-          try {
-            const res = await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'aiFridgeMatch', ingredients: raw }) });
-            const data = await res.json();
-            document.getElementById('mainLoader').style.display = 'none';
-            renderOutputDeck([ buildCard('Fridge Match', data.data.mealName || "Custom Bowl", 'internet') ]);
-          } catch(e) { document.getElementById('mainLoader').style.display = 'none'; showToast("AI Failed."); }
-      } else {
-          const findMatches = pool => pool.filter(meal => items.some(ingredient => meal.toLowerCase().includes(ingredient)));
-          const bMatches = findMatches(state.db.breakfast); const lMatches = findMatches(state.db.lunch); const dMatches = findMatches(state.db.dinner);
-          const deck = [];
-          if (bMatches.length > 0) deck.push(buildCard('Breakfast', bMatches[Math.floor(Math.random() * bMatches.length)], 'db'));
-          if (lMatches.length > 0) deck.push(buildCard('Lunch', lMatches[Math.floor(Math.random() * lMatches.length)], 'db'));
-          if (dMatches.length > 0) deck.push(buildCard('Dinner', dMatches[Math.floor(Math.random() * dMatches.length)], 'db'));
-          if (deck.length > 0) { renderOutputDeck(deck); } else { window.open(`https://www.google.com/search?q=${encodeURIComponent(items.join(' ') + ' recipes')}`, '_blank'); showToast("No local match. Opened Web."); }
-      }
+      const deck = [];
+      if (bMatches.length > 0) deck.push(buildCard('Breakfast', bMatches[Math.floor(Math.random() * bMatches.length)], 'db'));
+      if (lMatches.length > 0) deck.push(buildCard('Lunch', lMatches[Math.floor(Math.random() * lMatches.length)], 'db'));
+      if (dMatches.length > 0) deck.push(buildCard('Dinner', dMatches[Math.floor(Math.random() * dMatches.length)], 'db'));
+      if (deck.length > 0) { renderOutputDeck(deck); } else { window.open(`https://www.google.com/search?q=${encodeURIComponent(items.join(' ') + ' recipes')}`, '_blank'); showToast("No local match. Opened Web."); }
     }
 
     function renderSpreadsheetModal() {
@@ -541,10 +513,7 @@
 
     // --- FALLBACK LOGIC ---
     function executeLocalFallback(mealName) {
-        showToast("AI Offline. Applying Smart Fallback.");
-        currentFallbackMeal = mealName;
-        document.getElementById('fallbackBanner').style.display = 'block';
-        
+        showToast("Web Fetch Failed. Applying Smart Fallback.");
         const keywords = mealName.split(/\s+/).filter(w => w.length > 3);
         const trinity = ["Onions", "Tomatoes", "Green Chilies", "Ginger", "Garlic"];
         const combined = [...new Set([...keywords, ...trinity])];
@@ -554,67 +523,50 @@
                state.cart.unshift({ name: ing, checked: true, recent: false, flag: "Fallback Guess" });
             }
         });
-        syncCartToBackend(); switchTab('cart', document.querySelectorAll('.nav-item')[1]);
-    }
-
-    async function openWebFetchModal() {
-        if(!currentFallbackMeal) return;
-        openModal('webFetchModal');
-        document.getElementById('webFetchStatus').innerText = `Scraping internet for ${currentFallbackMeal}...`;
-        document.getElementById('webFetchList').innerHTML = '';
-        document.getElementById('applyWebFetchBtn').style.display = 'none';
-        try {
-            const res = await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'webFetchRecipe', mealName: currentFallbackMeal }) });
-            const resultWrapper = await res.json();
-            fetchedWebIngredients = resultWrapper.data || [];
-            if(!fetchedWebIngredients.length) { document.getElementById('webFetchStatus').innerText = "Web fetch failed. Please use manual add."; return; }
-            document.getElementById('webFetchStatus').innerText = "Found recipe. Select required items:";
-            document.getElementById('webFetchList').innerHTML = fetchedWebIngredients.map((ing, i) => `
-                <div style="display:flex; align-items:center; gap:10px; background:var(--color-surface-2); padding:10px; border-radius:1rem;">
-                   <input type="checkbox" id="wf-${i}" value="${escapeHtml(ing)}" checked style="width:20px; height:20px; accent-color:var(--color-primary);">
-                   <label for="wf-${i}">${escapeHtml(ing)}</label>
-                </div>
-            `).join('');
-            document.getElementById('applyWebFetchBtn').style.display = 'block';
-        } catch(e) { document.getElementById('webFetchStatus').innerText = "Web API failed."; }
-    }
-
-    function applyWebFetch() {
-        const selected = [];
-        fetchedWebIngredients.forEach((ing, i) => { if(document.getElementById(`wf-${i}`).checked) selected.push(ing); });
-        state.cart = state.cart.filter(c => c.flag !== "Fallback Guess");
-        selected.reverse().forEach(ing => {
-            if(!state.cart.some(c => c.name.toLowerCase() === ing.toLowerCase())) state.cart.unshift({ name: ing, checked: true, recent: false, flag: "Web Fetched" });
-        });
-        document.getElementById('fallbackBanner').style.display = 'none';
-        currentFallbackMeal = ""; fetchedWebIngredients = [];
-        closeModal('webFetchModal'); renderCart(); syncCartToBackend(); showToast("Cart Overridden with Web Recipe.");
+        syncCartToBackend(); 
     }
 
     async function breakdownRecipeToCart(mealName) {
       if(navigator.vibrate) navigator.vibrate(15);
-      const loader = document.getElementById('mainLoader'); loader.style.display = 'flex'; loader.querySelector('h2').innerText = "Analyzing Recipe...";
-      document.getElementById('fallbackBanner').style.display = 'none'; 
+      const loader = document.getElementById('mainLoader'); loader.style.display = 'flex'; loader.querySelector('h2').innerText = "AI Analyzing Recipe...";
       try {
         const res = await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'breakdownRecipe', mealName: mealName }) });
         const resultWrapper = await res.json();
         const ingredients = resultWrapper.data || [];
         if (!ingredients.length) throw new Error("Empty AI Response");
         
+        addIngredientsToCart(ingredients, "Ordered in last 7 days");
+        loader.style.display = 'none'; switchTab('cart', document.querySelectorAll('.nav-item')[1]);
+      } catch (e) {
+        // FAILSAFE 1: WEB FETCH
+        loader.querySelector('h2').innerText = "AI Failed. Fetching Web Recipe...";
+        try {
+            const webRes = await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'webFetchRecipe', mealName: mealName }) });
+            const webResultWrapper = await webRes.json();
+            const webIngredients = webResultWrapper.data || [];
+            if (!webIngredients.length) throw new Error("Web Fetch Failed");
+            
+            addIngredientsToCart(webIngredients, "Web Fetched");
+            loader.style.display = 'none'; showToast("Used Web Fetch Fallback."); switchTab('cart', document.querySelectorAll('.nav-item')[1]);
+        } catch(webErr) {
+            // FAILSAFE 2: LOCAL LOGIC
+            loader.style.display = 'none';
+            executeLocalFallback(mealName);
+            switchTab('cart', document.querySelectorAll('.nav-item')[1]);
+        }
+      }
+    }
+
+    function addIngredientsToCart(ingredients, recentFlagStr) {
         const now = new Date();
         const recentNames = state.orderHistory.filter(h => (now - new Date(h.date)) < 7*24*60*60*1000).map(h => h.item.toLowerCase());
-
         ingredients.reverse().forEach(ing => {
           const isRecent = recentNames.includes(ing.toLowerCase());
           if(!state.cart.some(c => c.name.toLowerCase() === ing.toLowerCase())) {
-            state.cart.unshift({ name: ing, checked: !isRecent, recent: isRecent, flag: isRecent ? "Ordered in last 7 days" : "" });
+            state.cart.unshift({ name: ing, checked: !isRecent, recent: isRecent, flag: isRecent ? recentFlagStr : "" });
           }
         });
-        syncCartToBackend(); loader.style.display = 'none'; switchTab('cart', document.querySelectorAll('.nav-item')[1]);
-      } catch (e) {
-        loader.style.display = 'none';
-        executeLocalFallback(mealName);
-      }
+        syncCartToBackend();
     }
 
     function openMasterList() {
@@ -687,14 +639,42 @@
 
     function toggleCartItem(index) { if(navigator.vibrate) navigator.vibrate(15); state.cart[index].checked = !state.cart[index].checked; renderCart(); syncCartToBackend(); }
 
-    async function startGuidedShopping() {
+    let shoppingQueue = []; let shoppingIndex = 0;
+    function startGuidedShopping() {
       if(navigator.vibrate) navigator.vibrate(15);
-      const q = state.cart.filter(i => i.checked);
-      if(q.length === 0) return alert("Check at least one item.");
-      const itemsToAdd = q.map(i => i.name);
-      fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'updateHistory', items: itemsToAdd }) }).catch(e=>e);
-      window.location.href = `swiggy://instamart/search?query=${encodeURIComponent(q[0].name)}`;
+      shoppingQueue = state.cart.filter(i => i.checked);
+      if(shoppingQueue.length === 0) return showToast("Check at least one item.");
+      shoppingIndex = 0; updateGuidedUI(); document.getElementById('guided-overlay').classList.add('active');
     }
+    
+    function updateGuidedUI() {
+      const item = shoppingQueue[shoppingIndex];
+      document.getElementById('shopping-progress').innerText = `Item ${shoppingIndex + 1} of ${shoppingQueue.length}`;
+      document.getElementById('shopping-item-name').innerText = escapeHtml(item.name);
+    }
+    
+    function openSwiggy() { window.location.href = `swiggy://instamart/search?query=${encodeURIComponent(shoppingQueue[shoppingIndex].name)}`; }
+    function openBlinkit() { window.location.href = `blinkit://search?q=${encodeURIComponent(shoppingQueue[shoppingIndex].name)}`; }
+    
+    function markFoundAndNext() {
+      if(navigator.vibrate) navigator.vibrate(15);
+      const current = shoppingQueue[shoppingIndex];
+      const dbIdx = state.cart.findIndex(c => c.name.toLowerCase() === current.name.toLowerCase());
+      if(dbIdx > -1) { state.cart[dbIdx].checked = false; state.cart[dbIdx].recent = true; state.cart[dbIdx].flag = "Just Bought"; }
+      fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'updateHistory', items: [current.name] }) }).catch(e=>e);
+      shoppingIndex++;
+      if(shoppingIndex >= shoppingQueue.length) { closeGuidedShopping(); syncCartToBackend(); showToast("Shopping Complete!"); }
+      else { updateGuidedUI(); }
+    }
+    
+    function markNotFoundAndNext() {
+      if(navigator.vibrate) navigator.vibrate(15);
+      shoppingIndex++;
+      if(shoppingIndex >= shoppingQueue.length) { closeGuidedShopping(); syncCartToBackend(); showToast("Shopping Complete. Skipped items kept in cart."); }
+      else { updateGuidedUI(); }
+    }
+    
+    function closeGuidedShopping() { document.getElementById('guided-overlay').classList.remove('active'); renderCart(); }
     
     async function shareCart() {
         if(navigator.vibrate) navigator.vibrate(15);
@@ -796,29 +776,28 @@
     
     document.getElementById('surpriseBtn').addEventListener('click', async function() {
       els.suggestions.innerHTML = '<div class="empty"><h3>Fetching inspirations...</h3></div>';
-      if (aiMode) {
-          document.getElementById('mainLoader').style.display = 'flex';
-          document.getElementById('mainLoader').querySelector('h2').innerText = "AI Chef Thinking...";
-          try {
-              const res = await fetch(GOOGLE_SHEETS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'aiChefSpecial' }) });
-              const resultWrapper = await res.json();
-              document.getElementById('mainLoader').style.display = 'none';
-              const menu = resultWrapper.data || { breakfast: "Poha", lunch: "Dal Tadka", dinner: "Paneer Butter Masala" };
-              renderOutputDeck([ buildCard("Breakfast", menu.breakfast, 'internet'), buildCard("Lunch", menu.lunch, 'internet'), buildCard("Dinner", menu.dinner, 'internet') ]);
-          } catch(e) { 
-              document.getElementById('mainLoader').style.display = 'none';
-              const [b, l, d] = await Promise.all([ fetchInternetMeal(), fetchInternetMeal(), fetchInternetMeal() ]);
-              renderOutputDeck([ buildCard("Breakfast", b, 'internet'), buildCard("Lunch", l, 'internet'), buildCard("Dinner", d, 'internet') ]);
-          }
-      } else {
-          const [b, l, d] = await Promise.all([ fetchInternetMeal(), fetchInternetMeal(), fetchInternetMeal() ]);
-          renderOutputDeck([ buildCard("Breakfast", b, 'internet'), buildCard("Lunch", l, 'internet'), buildCard("Dinner", d, 'internet') ]);
-      }
+      const [b, l, d] = await Promise.all([ fetchInternetMeal(), fetchInternetMeal(), fetchInternetMeal() ]);
+      renderOutputDeck([ buildCard("Breakfast", b, 'internet'), buildCard("Lunch", l, 'internet'), buildCard("Dinner", d, 'internet') ]);
     });
     
     document.getElementById('fridgeBtn').addEventListener('click', () => openModal('fridgeModal'));
 
-    document.getElementById('openDataBtn').addEventListener('click', () => { openModal('dataModal'); });
+    document.querySelectorAll('[data-open-cookbook]').forEach(stat => {
+      stat.addEventListener('click', () => {
+        const cat = stat.dataset.openCookbook;
+        openModal('dataModal');
+        renderSpreadsheetModal();
+        setTimeout(() => {
+          const sec = document.querySelector(`[data-section="${cat}"]`);
+          if (sec && els.cookBookScrollArea) els.cookBookScrollArea.scrollTo({ top: sec.offsetTop - 20, behavior: 'smooth' });
+        }, 100);
+      });
+    });
+
+    document.getElementById('openDataBtn').addEventListener('click', () => { 
+        openModal('dataModal'); 
+        renderSpreadsheetModal(); 
+    });
     
     els.suggestions.addEventListener('click', async event => {
       const btn = event.target.closest('[data-action]'); if (!btn) return;
