@@ -623,7 +623,8 @@
       </div>
     </div>
   </div>
-  <script>
+
+<script>
   // ==========================================
   // FRONTEND: Application Logic
   // ==========================================
@@ -982,7 +983,7 @@
                <span class="master-name">${item.name}</span>
                <span class="master-meta">
                   <span>🔄 Bought ${item.freq} times</span>
-                  ${item.category ? `<span>· ${item.category}</span>` : ''}
+                  ${item.category && item.category !== 'Uncategorized' ? `<span>· ${item.category}</span>` : ''}
                </span>
             </div>
             <button class="icon-btn" onclick="app.addFromMaster('${item.name.replace(/'/g, "\\'")}')" style="background: var(--color-surface-elevated); border: 1px solid var(--color-border);">
@@ -1081,7 +1082,6 @@
              // Basic optimism
              this.closeMealModal();
              alert('Removed! Sync to finalize changes.'); 
-             // Note: You may want to wire up a dedicated 'deleteMeal' backend endpoint later.
            }
         };
       } else {
